@@ -1,0 +1,42 @@
+{
+    "parser": "babel-eslint",
+    "env": {
+        "es6": true,
+        "node": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+        "sourceType": "module"
+    },
+    "rules": {
+        "indent": [
+            "error",
+            2
+        ],
+        "linebreak-style": [
+            "error",
+            "unix"
+        ],
+        "quotes": [
+            "error",
+            "single"
+        ],
+        "semi": [
+            "error",
+            "always"
+        ],
+        "no-console": 1,
+        "curly": 2,
+        "camelcase": [2, {"properties": "always"}],
+        "array-bracket-spacing": 2,
+        "brace-style": [2, "1tbs" ],
+        "comma-spacing": 2,
+        "new-cap": 2,
+        "no-trailing-spaces": 2,
+        "arrow-parens": 2,
+        "arrow-spacing": 2,
+        "no-var": 2,
+        "prefer-arrow-callback": 2,
+        "no-unused-vars": 1
+    }
+}
