@@ -16,6 +16,23 @@ describe('Environment', () => {
     process.env.LANG = localeSave;
   });
 
+  describe('#getNlv()', () => {
+
+    it('should get nlv from default locale', () => {
+      let nlv = Environment.getNlv(process.env.LANG);
+      should.exist(nlv);
+      nlv.should.equal('2924');
+    });
+
+    it('should get default nlv due to locale not found', () => {
+      process.env.LANG = 'bad';
+      let nlv = Environment.getNlv(process.env.LANG);
+      should.exist(nlv);
+      nlv.should.equal('2924');
+    });
+
+  });
+
   describe('#getCcsid()', () => {
 
     it('should get ccsid from locale', () => {
