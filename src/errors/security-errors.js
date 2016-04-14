@@ -417,6 +417,161 @@ export default class SecurityErrors {
     };
   }
 
+  static get EXIT_POINT_PROCESSING_ERROR() {
+    return {
+      id: 0x00050001,
+      msg: 'Error processing exit point'
+    };
+  }
+
+  static get EXIT_PROGRAM_RESOLVE_ERROR() {
+    return {
+      id: 0x00050002,
+      msg: 'Resolving to exit point'
+    };
+  }
+
+  static get EXIT_PROGRAM_CALL_ERROR() {
+    return {
+      id: 0x00050003,
+      msg: 'Exit program call error'
+    };
+  }
+
+  static get EXIT_PROGRAM_DENIED_REQUEST() {
+    return {
+      id: 0x00050004,
+      msg: 'Error program denied request'
+    };
+  }
+
+  static get PROFILE_TOKEN_NOT_VALID() {
+    return {
+      id: 0x00060001,
+      msg: 'Profile token not valid'
+    };
+  }
+
+  static get PROFILE_TOKEN_NOT_VALID_MAXIMUM() {
+    return {
+      id: 0x00060002,
+      msg: 'Maximum number of profile tokens reached'
+    };
+  }
+
+  static get PROFILE_TOKEN_NOT_VALID_TIMEOUT_NOT_VALID() {
+    return {
+      id: 0x00060003,
+      msg: 'Profile token timeout not valid'
+    };
+  }
+
+  static get PROFILE_TOKEN_NOT_VALID_TYPE_NOT_VALID() {
+    return {
+      id: 0x00060004,
+      msg: 'Profile token type not valid'
+    };
+  }
+
+  static get PROFILE_TOKEN_NOT_VALID_NOT_REGENERABLE() {
+    return {
+      id: 0x00060005,
+      msg: 'Profile token not regenerable'
+    };
+  }
+
+  static get KERBEROS_TICKET_NOT_VALID_CONSISTENCY() {
+    return {
+      id: 0x00060006,
+      id2: 0x0006000B,
+      msg: 'Kerberos ticket not consistent'
+    };
+  }
+
+  static get KERBEROS_TICKET_NOT_VALID_MECHANISM() {
+    return {
+      id: 0x00060007,
+      msg: 'Invalid mechanism for kerberos ticket'
+    };
+  }
+
+  static get KERBEROS_TICKET_NOT_VALID_CREDENTIAL_NOT_VALID() {
+    return {
+      id: 0x00060008,
+      msg: 'Invalid credentials for kerberos ticket'
+    };
+  }
+
+  static get KERBEROS_TICKET_NOT_VALID_SIGNATURE() {
+    return {
+      id: 0x00060009,
+      msg: 'Invalid signature for kerberos ticket'
+    };
+  }
+
+  static get KERBEROS_TICKET_NOT_VALID_CREDENTIAL_NO_LONGER_VALID() {
+    return {
+      id: 0x0006000A,
+      msg: 'Credentials no longer valid for kerberos ticket'
+    };
+  }
+
+  static get KERBEROS_TICKET_NOT_VALID_VERIFICATION() {
+    return {
+      id: 0x0006000C,
+      msg: 'Verification failed for kerberos ticket'
+    };
+  }
+
+  static get KERBEROS_TICKET_NOT_VALID_EIM() {
+    return {
+      id: 0x0006000D,
+      msg: 'Invlid EMI identifier for kerberos ticket'
+    };
+  }
+
+  static get KERBEROS_TICKET_NOT_VALID_SYSTEM_PROFILE() {
+    return {
+      id: 0x0006000E,
+      msg: 'Kerberos ticket invalid due to invalid system profile'
+    };
+  }
+
+  static get KERBEROS_TICKET_NOT_VALID_MULTIPLE_PROFILES() {
+    return {
+      id: 0x0006000F,
+      msg: 'Kerberos ticket invalid due to due multiple profiles mapped'
+    };
+  }
+
+  static get GENERATE_TOKEN_CAN_NOT_CONNECT() {
+    return {
+      id: 0x00070001,
+      msg: 'Can not connect to EMI system domain'
+    };
+  }
+
+  static get GENERATE_TOKEN_CAN_NOT_CHANGE_CCSID() {
+    return {
+      id: 0x00070002,
+      msg: 'Can not change the CCSID for EMI request'
+    };
+  }
+
+  static get GENERATE_TOKEN_CAN_NOT_OBTAIN_NAME() {
+    return {
+      id: 0x00070003,
+      msg: 'Can not obtain the EMI registry name'
+    };
+  }
+
+  static get GENERATE_TOKEN_NO_MAPPING() {
+    return {
+      id: 0x00070004,
+      msg: 'Can not map token'
+    };
+  }
+
   /**
    * Get message for id. Bizarre implementation to simplify code. No idea how
    * brittle this is...
