@@ -1,6 +1,7 @@
 'use strict';
 
 import Service from './service';
+import SecurityErrors from '../errors/security-errors';
 import { SignonSeedExchangeRequest, SignonSeedExchangeResponse } from '../packet/signon-seed-exchange';
 import { SignonInfoRequest, SignonInfoResponse } from '../packet/signon-info';
 import PasswordEncryptor from '../util/password-encryptor';
@@ -112,8 +113,8 @@ export default class Signon extends Service {
       let resp = new SignonInfoResponse(data);
       debug('Info response return code from %s is %d ', this.system.hostName, resp.rc);
       if (resp.rc !== 0) {
-        error('Error received during signon info with %s: %s', this.system.hostName, SignonErrors.get(resp.rc));
-        reject(new Error('Error received during signon info with ' + this.system.hostName + ' : ' + SignonErrors.get(resp.rc)));
+        error('Error received during signon info with %s: %s', this.system.hostName, SecurityErrors.get(resp.rc));
+        reject(new Error('Error received during signon info with ' + this.system.hostName + ' : ' + SecurityErrors.get(resp.rc)));
       } else {
         let res = {
           serverCCSID: resp.serverCCSID,
@@ -127,61 +128,6 @@ export default class Signon extends Service {
         resolve(res);
       }
     }
-  }
-
-}
-
-/**
- * Signon errors.
- */
-export class SignonErrors {
-
-  static get PASSWORD_LENGTH_NOT_VALID() {
-    return {
-      id: 0x00010008,
-      msg: 'Password length not valid'
-    };
-  }
-
-  static get USERID_UNKNOWN() {
-    return {
-      id: 0x00020001,
-      msg: 'Unknown user ID'
-    };
-  }
-
-  static get USERID_DISABLED() {
-    return {
-      id: 0x00020002,
-      msg: 'User ID is disabled'
-    };
-  }
-
-  static get PASSWORD_INCORRECT() {
-    return {
-      id: 0x0003000B,
-      msg: 'Incorrect password'
-    };
-  }
-
-  static get PASSWORD_INCORRECT_DISABLE() {
-    return {
-      id: 0x0003000C,
-      msg: 'Incorrect password, user ID will be disabled on the next incorrect password'
-    };
-  }
-
-  static get(id) {
-    let msg = 'Unknown error';
-    switch(id) {
-    case SignonErrors.PASSWORD_LENGTH_NOT_VALID.id: msg = SignonErrors.PASSWORD_LENGTH_NOT_VALID.msg; break;
-    case SignonErrors.USERID_UNKNOWN.id: msg = SignonErrors.USERID_UNKNOWN.msg; break;
-    case SignonErrors.USERID_DISABLED.id: msg = SignonErrors.USERID_DISABLED.msg; break;
-    case SignonErrors.PASSWORD_INCORRECT.id: msg = SignonErrors.PASSWORD_INCORRECT.msg; break;
-    case SignonErrors.PASSWORD_INCORRECT_DISABLE.id: msg = SignonErrors.PASSWORD_INCORRECT_DISABLE.msg; break;
-    default: break;
-    }
-    return msg;
   }
 
 }

@@ -2,7 +2,7 @@
 
 const debug = require('debug')('ibmi:mock:server:signon');
 
-import { SignonErrors } from '../../../src/service/signon';
+import SecurityErrors from '../../../src/errors/security-errors';
 import Packet from '../../../src/packet/packet';
 import { SignonSeedExchangeRequest, SignonSeedExchangeResponse } from '../../../src/packet/signon-seed-exchange';
 import { SignonInfoRequest, SignonInfoResponse } from '../../../src/packet/signon-info';
@@ -110,7 +110,7 @@ export default class Signon {
       socket.write(resp.data);
     } else {
       let resp = new SignonInfoResponse();
-      resp.rc = SignonErrors.USERID_UNKNOWN.id;
+      resp.rc = SecurityErrors.USERID_UNKNOWN.id;
       resp.correlationId = req.correlationId;
       debug('Info response: %s', resp.data.toString('hex'));
       socket.write(resp.data);

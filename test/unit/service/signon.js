@@ -1,7 +1,6 @@
 'use strict';
 
 import Signon from '../../../src/service/signon';
-import { SignonErrors } from '../../../src/service/signon';
 import IBMi from '../../../src/ibmi';
 import Packet from '../../../src/packet/packet';
 import { SignonSeedExchangeRequest } from '../../../src/packet/signon-seed-exchange';
@@ -12,26 +11,6 @@ import sinon from 'sinon';
 import Mitm from 'mitm';
 
 require('../../common');
-
-describe('SignonErrors', () => {
-
-  describe('#get()', () => {
-
-    it('should fail due to unknown error', () => {
-      SignonErrors.get(666).should.equal('Unknown error');
-    });
-
-    it('should get errors', () => {
-      SignonErrors.get(0x00020001).should.equal('Unknown user ID');
-      SignonErrors.get(0x00010008).should.equal('Password length not valid');
-      SignonErrors.get(0x00020002).should.equal('User ID is disabled');
-      SignonErrors.get(0x0003000B).should.equal('Incorrect password');
-      SignonErrors.get(0x0003000C).should.equal('Incorrect password, user ID will be disabled on the next incorrect password');
-    });
-
-  });
-
-});
 
 describe('Signon', () => {
 
