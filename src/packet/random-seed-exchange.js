@@ -10,11 +10,11 @@ export class RandomSeedExchangeRequest extends Packet {
    * @public
    * @constructor
    */
-  constructor(serviceId, socket) {
+  constructor(serviceId) {
     if (typeof(serviceId) != 'number') {
       throw new Error('Invalid service ID');
     }
-    super(28, socket);
+    super(28);
     this.length = 28;
     this.serviceId = serviceId;
     this.clientAttributes = 1; // Can use SHA1

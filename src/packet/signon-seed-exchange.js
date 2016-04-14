@@ -10,8 +10,8 @@ export class SignonSeedExchangeRequest extends Packet {
   /**
    * Constructor.
    */
-  constructor(socket) {
-    super(52, socket);
+  constructor() {
+    super(52);
 
     this.length = 52;
     this.serviceId = Signon.SERVICE.id;

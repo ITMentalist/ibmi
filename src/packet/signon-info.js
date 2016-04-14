@@ -14,7 +14,7 @@ export class SignonInfoRequest extends Packet {
    * @constructor
    * @public
    */
-  constructor(userId, encryptedPassword, serverLevel, socket) {
+  constructor(userId, encryptedPassword, serverLevel) {
     if (typeof(userId) != 'string') {
       throw new Error('Invalid user ID');
     }
@@ -25,7 +25,7 @@ export class SignonInfoRequest extends Packet {
       throw new Error('Invalid server level');
     }
 
-    super(37 + encryptedPassword.length + 16 + (serverLevel < 5 ? 0 : 7), socket);
+    super(37 + encryptedPassword.length + 16 + (serverLevel < 5 ? 0 : 7));
 
     this.passwordLength = encryptedPassword.length;
 
@@ -163,7 +163,7 @@ export class SignonInfoRequest extends Packet {
   }
 
   /**
-   * Return the ID for the password field.
+   * Return the ID for the user ID field.
    * @return {number} The ID.
    */
   static get USERID() {
