@@ -1,0 +1,7 @@
+src
+test
+gulpfile.babel.js
+coverage
+.travis.yml
+.eslintrc.json
+.babelrc

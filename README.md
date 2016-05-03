@@ -16,6 +16,7 @@ the Java code. This in pure Javascript.
 | ----------- | ----------------------------| ----- |
 | Port Mapper | Locate service port by name |       |
 | Signon      | Signon to system            |       |
+| Data queue  | Write to data queue         |       |
 
 API
 --------------

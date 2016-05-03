@@ -14,7 +14,8 @@
         "url": "https://github.com/smokerbag/ibmi.git"
     },
     "scripts": {
-        "test": "node node_modules/gulp/bin/gulp.js travisTest"
+        "test": "node node_modules/gulp/bin/gulp.js travisTest",
+        "compile": "node node_modules/gulp/bin/gulp.js transpile"
     },
     "dependencies": {
         "codepage": "1.4.0",

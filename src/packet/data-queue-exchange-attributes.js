@@ -9,9 +9,9 @@ export class DataQueueExchangeAttributesRequest extends Packet {
     super(26);
     this.length = 26;
     this.serviceId = DataQueueService.SERVICE.id;
-    this.templateLength = 6;
-    this.requestResponseId = DataQueueExchangeAttributesRequest.ID;
-    this.clientVersion = 1;
+    this.templateLength = this.length - 20;
+    //this.requestResponseId = DataQueueExchangeAttributesRequest.ID;
+    this.clientVersion = 0x00000001;
   }
 
   get clientVersion() {

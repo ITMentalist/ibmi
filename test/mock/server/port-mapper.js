@@ -70,6 +70,9 @@ export default class PortMapper {
     } else if (serviceName == 'as-rmtcmd') {
       resp[0] = 0x2B;
       resp.writeUIntBE(8475, 1, 4);
+    } else if (serviceName == 'as-dtaq') {
+      resp[0] = 0x2B;
+      resp.writeUIntBE(8472, 1, 4);
     }
     return resp;
   }

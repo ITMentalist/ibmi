@@ -38,4 +38,17 @@ export default class Converter {
     return cptable.utils.encode(cp, str);
   }
 
+  /**
+   * Buffer to string.
+   */
+  bufferToString(buff) {
+    if (buff) {
+      let cp = ccsidMap.get(this.ccsid);
+      debug('Attempt to convert buffer %s to string with CCSID %d and codepage %d', buff.toString('hex'), this.ccsid, cp);
+      return cptable.utils.decode(cp, buff);
+    } else {
+      return null;
+    }
+  }
+
 }

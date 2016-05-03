@@ -4,6 +4,7 @@ import DataQueueService from '../../../src/service/data-queue-service';
 import IBMi from '../../../src/ibmi';
 import Packet from '../../../src/packet/packet';
 import { DataQueueExchangeAttributesRequest, DataQueueExchangeAttributesResponse } from '../../../src/packet/data-queue-exchange-attributes';
+import { DataQueueWriteRequest } from '../../../src/packet/data-queue-write';
 import DataQueueReturnCodeResponse from '../../../src/packet/data-queue-return-code';
 
 import Mitm from 'mitm';
@@ -16,7 +17,8 @@ describe('DataQueueService', () => {
 
   let dataQueueService, system, mitm, getConnection;
   let invalidExchangeAttributesResponse = false, exchangeAttributeError = false;
-  let invalidExchangeAttributesResponseId = false;
+  let invalidExchangeAttributesResponseId = false, invalidWriteResponse = false;
+  let invalidWriteResponseId = false, writeError = false;
 
   beforeEach(() => {
     system = new IBMi({
@@ -40,7 +42,7 @@ describe('DataQueueService', () => {
     mitm.on('connection', (socket) => {
       socket.on('data', (data) => {
         let packet = new Packet(data);
-        if (packet.requestResponseId == DataQueueExchangeAttributesRequest.ID) {
+        if (packet.requestResponseId == 0 && packet.length == 26) {
           if (invalidExchangeAttributesResponse) {
             socket.write(new Buffer('bad'));
           } else if (exchangeAttributeError) {
@@ -55,6 +57,22 @@ describe('DataQueueService', () => {
             let p = new DataQueueExchangeAttributesResponse();
             socket.write(p.data);
           }
+        } else if (packet.requestResponseId == DataQueueWriteRequest.ID) {
+          if (invalidWriteResponse) {
+            socket.write(new Buffer('bad'));
+          } else if (invalidWriteResponseId) {
+            let b = new Buffer(22);
+            b.fill(0);
+            socket.write(b);
+          } else if (writeError) {
+            let p = new DataQueueReturnCodeResponse();
+            p.rc = 1;
+            socket.write(p.data);
+          } else {
+            let p = new DataQueueReturnCodeResponse();
+            p.rc = 0xF000;
+            socket.write(p.data);
+          }
         }
       });
     });
@@ -67,6 +85,9 @@ describe('DataQueueService', () => {
     invalidExchangeAttributesResponse = false;
     exchangeAttributeError = false;
     invalidExchangeAttributesResponseId = false;
+    invalidWriteResponse = false;
+    invalidWriteResponseId = false;
+    writeError = false;
     dataQueueService.attributesExchanged = false;
   });
 
@@ -86,37 +107,48 @@ describe('DataQueueService', () => {
 
   describe('#write()', () => {
 
-    it('should fail due to invalid data', () => {
-      return dataQueueService.write().should.be.rejectedWith(/Invalid data/);
-    });
-
     it('should fail due to connection error', () => {
       mitm.disable();
-      return dataQueueService.write(null, new Buffer('DATA')).should.be.rejectedWith(/ECONNREFUSED/);
+      return dataQueueService.write('queue', 'library', null, new Buffer('DATA')).should.be.rejectedWith(/ECONNREFUSED/);
     });
 
     it('should fail due invalid exchange attributes response', () => {
       invalidExchangeAttributesResponse = true;
-      return dataQueueService.write(null, new Buffer('DATA')).should.be.rejectedWith(/Invalid exchange attributes response/);
+      return dataQueueService.write('queue', 'library', null, new Buffer('DATA')).should.be.rejectedWith(/Invalid exchange attributes response/);
     });
 
     it('should fail due to exchange attribute error', () => {
       exchangeAttributeError = true;
-      return dataQueueService.write(null, new Buffer('DATA')).should.be.rejectedWith(/Error received during attribute exchange/);
+      return dataQueueService.write('queue', 'library', null, new Buffer('DATA')).should.be.rejectedWith(/Error received during attribute exchange/);
     });
 
-    it('should fail due to invalid exchnage attributes response id', () => {
+    it('should fail due to invalid exchange attributes response id', () => {
       invalidExchangeAttributesResponseId = true;
-      return dataQueueService.write(null, new Buffer('DATA')).should.be.rejectedWith(/Invalid exchange attributes response ID/);
+      return dataQueueService.write('queue', 'library', null, new Buffer('DATA')).should.be.rejectedWith(/Invalid exchange attributes response ID/);
+    });
+
+    it('should fail due to invalid write response', () => {
+      invalidWriteResponse = true;
+      return dataQueueService.write('queue', 'library', null, new Buffer('DATA')).should.be.rejectedWith(/Invalid write response/);
+    });
+
+    it('should fail due to invalid write response id', () => {
+      invalidWriteResponseId = true;
+      return dataQueueService.write('queue', 'library', null, new Buffer('DATA')).should.be.rejectedWith(/Invalid write response ID/);
+    });
+
+    it('should fail due to write error', () => {
+      writeError = true;
+      return dataQueueService.write('queue', 'library', null, new Buffer('DATA')).should.be.rejectedWith(/Write failed with code/);
     });
 
     it('should succeed', () => {
-      return dataQueueService.write(null, new Buffer('DATA')).should.be.fulfilled;
+      return dataQueueService.write('queue', 'library', null, new Buffer('DATA')).should.be.fulfilled;
     });
 
     it('should succeed and not exchange attributes', () => {
       dataQueueService.attributesExchanged = true;
-      return dataQueueService.write(null, new Buffer('DATA')).should.be.fulfilled;
+      return dataQueueService.write('queue', 'library', null, new Buffer('DATA')).should.be.fulfilled;
     });
 
   });

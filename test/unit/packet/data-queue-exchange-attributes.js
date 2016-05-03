@@ -14,7 +14,7 @@ describe('DataQueueExchangeAttributesRequest', () => {
       p.serviceId.should.equal(0xE007);
       p.templateLength.should.equal(6);
       p.clientVersion.should.equal(1);
-      p.requestResponseId.should.equal(0x8000);
+      p.requestResponseId.should.equal(0);
       console.log(p.data.toString('hex'));
     });
 

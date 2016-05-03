@@ -14,13 +14,20 @@ const isparta = require('isparta');
 let watching = false;
 
 const unitTestSrc = './test/unit/**/*.js';
+const functionalTestSrc = './test/functional/**/*.js';
 
 const knownUnitOptions = {
   string: ['spec'],
   default: {spec: unitTestSrc}
 };
 
+const knownFunctionalOptions = {
+  string: [ 'spec' ],
+  default: {spec: functionalTestSrc}
+};
+
 let unitOptions = minimist(process.argv.slice(2), knownUnitOptions);
+let functionalOptions = minimist(process.argv.slice(2), knownFunctionalOptions);
 
 function onError(err) {
   console.log(err.toString());
@@ -122,7 +129,7 @@ gulp.task('functionalTestOnly', [ 'instrument' ], () => {
     reporter: 'spec',
     bail: !watching
   };
-  return gulp.src([ './test/functional/**/*.js' ], {read: false})
+  return gulp.src([ functionalOptions.spec ], {read: false})
     .pipe(mocha(mochaOpts))
     .on('error', onError);
 });
