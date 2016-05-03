@@ -60,3 +60,67 @@ export class RandomSeedExchangeRequest extends Packet {
   }
 
 }
+
+/**
+ * The RandomSeedExchangeResponse implements a random seed exchange response.
+ * @augments Packet
+ */
+export class RandomSeedExchangeResponse extends Packet {
+
+  /**
+   * Create a new random seed exchange response instance.
+   * @public
+   * @constructor
+   */
+  constructor(dataOrSize) {
+    if (!dataOrSize) {
+      super(32);
+    } else {
+      super(dataOrSize);
+    }
+
+    if (!dataOrSize) {
+      // Initialize fields
+      this.length = 32;
+      this.templateLength = 8;
+      this.requestResponseId = RandomSeedExchangeResponse.ID;
+    }
+  }
+
+  /**
+   * Get return code.
+   * @return {number} The return code.
+   */
+  get rc() {
+    return this.get32Bit(20);
+  }
+
+  /**
+   * Set the return code.
+   * @param {number} val - The value.
+   */
+  set rc(val) {
+    this.set32Bit(val, 20);
+  }
+
+  /**
+   * Get the seed.
+   * @return {Buffer} The seed.
+   */
+  get seed() {
+    return this.data.slice(24);
+  }
+
+  /**
+   * Set the seeed.
+   * @param {Buffer} val - The value.
+   */
+  set seed(val) {
+    val.copy(this.data, 24, 0, 8);
+  }
+
+  static get ID() {
+    return 0xF001;
+  }
+
+}

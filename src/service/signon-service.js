@@ -6,14 +6,14 @@ import { SignonSeedExchangeRequest, SignonSeedExchangeResponse } from '../packet
 import { SignonInfoRequest, SignonInfoResponse } from '../packet/signon-info';
 import PasswordEncryptor from '../util/password-encryptor';
 
-const debug = require('debug')('ibmi:service:signon');
-let error = require('debug')('ibmi:service:signon:error');
+const debug = require('debug')('ibmi:service:signon-service');
+let error = require('debug')('ibmi:service:signon-service:error');
 error.color = 1;
 
 /**
  * Signon service.
  */
-export default class Signon extends Service {
+export default class SignonService extends Service {
 
   static get SERVICE() {
     return {
@@ -29,8 +29,8 @@ export default class Signon extends Service {
    * @constructor
    */
   constructor(system) {
-    super(system, Signon.SERVICE);
-    debug('Signon created to %s with connection ID %d, service = %j', this.system.hostName, this.connectionId, Signon.SERVICE);
+    super(system, SignonService.SERVICE);
+    debug('Signon service created to %s with connection ID %d, service = %j', this.system.hostName, this.connectionId, SignonService.SERVICE);
   }
 
   /**

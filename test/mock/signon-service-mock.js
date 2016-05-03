@@ -1,4 +1,4 @@
-export default class Signon {
+export default class SignonService {
 
   constructor(system) {
     this.system = system;

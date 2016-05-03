@@ -1,10 +1,10 @@
 'use strict';
 
-const debug = require('debug')('ibmi:service:command');
-let error = require('debug')('ibmi:service:command:error');
+const debug = require('debug')('ibmi:service:command-service');
+let error = require('debug')('ibmi:service:command-service:error');
 error.color = 1;
 
-export default class Command {
+export default class CommandService {
 
   static get SERVICE() {
     return {

@@ -1,6 +1,6 @@
 'use strict';
 
-import Signon from '../../../src/service/signon';
+import SignonService from '../../../src/service/signon-service';
 import IBMi from '../../../src/ibmi';
 import Packet from '../../../src/packet/packet';
 import { SignonSeedExchangeRequest } from '../../../src/packet/signon-seed-exchange';
@@ -12,9 +12,9 @@ import Mitm from 'mitm';
 
 require('../../common');
 
-describe('Signon', () => {
+describe('SignonService', () => {
 
-  let signon, system, mitm, invalidSeedExchangeResponse = false;
+  let signonService, system, mitm, invalidSeedExchangeResponse = false;
   let getConnection, seedExchangeError = false, invalidInfoResponse = false, infoError = false;
 
   beforeEach(() => {
@@ -23,13 +23,13 @@ describe('Signon', () => {
       userId: 'GOOD',
       password: 'GOOD'
     });
-    signon = new Signon(system);
+    signonService = new SignonService(system);
     mitm = Mitm();
-    getConnection = sinon.stub(signon.system, 'getConnection', () => {
+    getConnection = sinon.stub(signonService.system, 'getConnection', () => {
       return new Promise((resolve, reject) => {
         let socket = net.connect();
         socket.on('connect', () => {
-          resolve({socket: socket, connectionId: signon.connectionId});
+          resolve({socket: socket, connectionId: signonService.connectionId});
         });
         socket.on('error', (err) => {
           reject(err);
@@ -76,19 +76,19 @@ describe('Signon', () => {
     seedExchangeError = false;
     invalidInfoResponse = false;
     infoError = false;
-    signon.disconnect();
+    signonService.disconnect();
   });
 
   describe('#constructor()', () => {
 
     it('should fail to create instance due to invalid parameters', () => {
-      expect(() => {return new Signon();}).to.throw(/Invalid IBMi system/);
-      expect(() => {return new Signon({});}).to.throw(/Invalid IBMi system/);
+      expect(() => {return new SignonService();}).to.throw(/Invalid IBMi system/);
+      expect(() => {return new SignonService({});}).to.throw(/Invalid IBMi system/);
     });
 
     it('should create new instance', () => {
-      signon = new Signon(system);
-      should.exist(signon.connectionId);
+      signonService = new SignonService(system);
+      should.exist(signonService.connectionId);
     });
 
   });
@@ -97,31 +97,31 @@ describe('Signon', () => {
 
     it('should fail due to connection error', () => {
       mitm.disable();
-      return signon.signon().should.be.rejectedWith(/ECONNREFUSED/);
+      return signonService.signon().should.be.rejectedWith(/ECONNREFUSED/);
     });
 
     it('should fail due to invalid seed exchange response', () => {
       invalidSeedExchangeResponse = true;
-      return signon.signon().should.be.rejectedWith(/Invalid seed exchange response received/);
+      return signonService.signon().should.be.rejectedWith(/Invalid seed exchange response received/);
     });
 
     it('should fail due to seed exchange error', () => {
       seedExchangeError = true;
-      return signon.signon().should.be.rejectedWith(/Error received during signon seed exchange/);
+      return signonService.signon().should.be.rejectedWith(/Error received during signon seed exchange/);
     });
 
     it('should fail due to invalid info response', () => {
       invalidInfoResponse = true;
-      return signon.signon().should.be.rejectedWith(/Invalid info response received/);
+      return signonService.signon().should.be.rejectedWith(/Invalid info response received/);
     });
 
     it('should fail due to info error', () => {
       infoError = true;
-      return signon.signon().should.be.rejectedWith(/Error received during signon info/);
+      return signonService.signon().should.be.rejectedWith(/Error received during signon info/);
     });
 
     it('should succeed', () => {
-      return signon.signon().should.eventually.be.fulfilled;
+      return signonService.signon().should.eventually.be.fulfilled;
     });
 
   });

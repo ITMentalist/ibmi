@@ -1,7 +1,7 @@
 'use strict';
 
 import Service from '../../../src/service/service';
-import Signon from '../../../src/service/signon';
+import SignonService from '../../../src/service/signon-service';
 import IBMi from '../../../src/ibmi';
 import Packet from '../../../src/packet/packet';
 
@@ -42,13 +42,13 @@ describe('Service', () => {
       expect(() => {return new Service({});}).to.throw(/Invalid IBMi system/);
       expect(() => {return new Service(system);}).to.throw(/Invalid service info/);
       expect(() => {return new Service(system, {});}).to.throw(/Invalid service info/);
-      expect(() => {return new Service(system, {id: Signon.SERVICE.id});}).to.throw(/Invalid service info/);
+      expect(() => {return new Service(system, {id: SignonService.SERVICE.id});}).to.throw(/Invalid service info/);
     });
 
     it('should create new instance', () => {
-      service = new Service(system, { id: Signon.SERVICE.id, name: Signon.SERVICE.name });
+      service = new Service(system, { id: SignonService.SERVICE.id, name: SignonService.SERVICE.name });
       should.exist(service.connectionId);
-      service.id.should.equal(Signon.SERVICE.id);
+      service.id.should.equal(SignonService.SERVICE.id);
     });
 
   });
@@ -56,7 +56,7 @@ describe('Service', () => {
   describe('#connect()', () => {
 
     beforeEach(() => {
-      service = new Service(system, Signon.SERVICE);
+      service = new Service(system, SignonService.SERVICE);
     });
 
     it('should fail due to getConnection error', () => {
@@ -73,7 +73,7 @@ describe('Service', () => {
   describe('#sendPacket()', () => {
 
     beforeEach(() => {
-      service = new Service(system, Signon.SERVICE);
+      service = new Service(system, SignonService.SERVICE);
     });
 
     it('should send packet', (done) => {
@@ -91,7 +91,7 @@ describe('Service', () => {
   describe('#disconnect()', () => {
 
     beforeEach(() => {
-      service = new Service(system, Signon.SERVICE);
+      service = new Service(system, SignonService.SERVICE);
     });
 
     it('should disconnect with no connection', () => {

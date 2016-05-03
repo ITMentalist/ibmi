@@ -1,7 +1,7 @@
 'use strict';
 
 import Packet from './packet';
-import Signon from '../service/signon';
+import SignonService from '../service/signon-service';
 import PasswordConverter from '../util/password-converter';
 
 export class ChangePasswordRequest extends Packet {
@@ -29,7 +29,7 @@ export class ChangePasswordRequest extends Packet {
     this.oldPasswordLength = oldPassword.length;
     this.newPasswordLength = newPassword.length;
     this.length = this.data.length;
-    this.serviceId = Signon.SERVICE.id;
+    this.serviceId = SignonService.SERVICE.id;
     this.requestResponseId = ChangePasswordRequest.ID;
     this.templateLength = 1;
 

@@ -1,9 +1,11 @@
 'use strict';
 
 import PortMapper from './service/port-mapper';
-import Signon from './service/signon';
+import SignonService from './service/signon-service';
 import Environment from './util/environment';
 import { RandomSeedExchangeRequest, RandomSeedExchangeResponse } from './packet/random-seed-exchange';
+import { StartServerRequest, StartServerResponse } from './packet/start-server';
+import PasswordEncryptor from './util/password-encryptor';
 
 const debug = require('debug')('ibmi:ibmi');
 let error = require('debug')('ibmi:ibmi:error');
@@ -102,7 +104,7 @@ export default class IBMi {
       res.connectionId = connectionId;
       // If we are not connecting to the sign on service we must perform some additional
       // extra steps.
-      if (service.name != Signon.SERVICE.name) {
+      if (service.name != SignonService.SERVICE.name) {
         debug('Not signon service; signon, exhange attributes, and start server');
         // First we need to signon if we haven't already
         if (!this.signonPerformed) {
@@ -111,6 +113,12 @@ export default class IBMi {
         }
         // Now we exchange random seeds
         let seeds = await this.exchangeRandomSeeds(service, socket, connectionId);
+        // Now send a start server request
+        let startServerResp = await this.startServer(seeds.clientSeed, seeds.serverSeed, service, socket, connectionId);
+        debug('Start server response %j', startServerResp);
+        res.jobName = startServerResp.jobName;
+        //res.jobString = Converter.bufferToStringByCCSID(res.jobName, this.serverCCSID);
+        res.correlationId = startServerResp.correlationId;
       }
       this.connections.set(connectionId, res);
     } catch (err) {
@@ -129,10 +137,10 @@ export default class IBMi {
     debug('Attempt to sign on to %s as %s', this.hostName, this.userId);
     let res;
 
-    let signon = new Signon(this);
+    let signonService = new SignonService(this);
 
     try {
-      res = await signon.signon();
+      res = await signonService.signon();
       debug('Successfully signed on to %s as %s: %j', this.hostName, this.userId, res);
       this.serverCCSID = res.serverCCSID;
       this.signonPerformed = true;
@@ -140,9 +148,24 @@ export default class IBMi {
       error('Failed to signon to %s as %s: %s', this.hostName, this.userId, err);
       throw(err);
     } finally {
-      signon.disconnect();
+      signonService.disconnect();
     }
     return res;
+  }
+
+  /**
+   * Start server.
+   */
+  async startServer(clientSeed, serverSeed, service, socket, connectionId) {
+    return new Promise((resolve, reject) => {
+      debug('Starting server for service %s on %s', service.name, this.hostName);
+      let encryptor = new PasswordEncryptor(this.passwordLevel);
+      let encryptedPassword = encryptor.encrypt(this.userId, this.password, clientSeed, serverSeed);
+      let req = new StartServerRequest(this.userId, encryptedPassword, service.id);
+      req.correlationId = connectionId;
+      socket.once('data', this.handleStartServerResponse.bind(this, resolve, reject));
+      this.sendPacket(req, socket);
+    });
   }
 
   /**
@@ -158,11 +181,47 @@ export default class IBMi {
     });
   }
 
+  handleStartServerResponse(resolve, reject, data) {
+    debug('Start server data received: %s', data.toString('hex'));
+    if (data.length < 24) {
+      error('Invalid start server response from %s', this.hostName);
+      reject(new Error('Invalid start server response from ' + this.hostName));
+    } else {
+      let resp = new StartServerResponse(data);
+      debug('Start server response return code from %s is %d', this.hostName, resp.rc);
+      if (resp.rc !== 0) {
+        error('Received error code during start server with %s: %d', this.hostName, resp.rc);
+        reject(new Error('Error received during start server with ' + this.hostName + ': ' + resp.rc));
+      } else {
+        let res = {
+          correlationId: resp.correlationId,
+          jobName: resp.jobName
+        };
+        resolve(res);
+      }
+    }
+  }
+
   handleRandomSeedExchangeResponse(resolve, reject, clientSeed, data) {
     debug('Random seed exchange data received: %s', data.toString('hex'));
     if (data.length < 24) {
       error('Invalid random seed exchange response from %s', this.hostName);
       reject(new Error('Invalid random seed exchange response from ' + this.hostName));
+    } else {
+      let resp = new RandomSeedExchangeResponse(data);
+      debug('Random seed exchange response return code from %s is %d', this.hostName, resp.rc);
+      if (resp.rc !== 0) {
+        error('Received error code during start server with %s: %d', this.hostName, resp.rc);
+        reject(new Error('Error received during start server with ' + this.hostName + ': ' + resp.rc));
+      } else {
+        let serverSeed = resp.seed;
+        debug('Server seed from %s is %s, our seed is %s', this.hostName, serverSeed.toString('hex'), clientSeed.toString('hex'));
+        let res = {
+          serverSeed: serverSeed,
+          clientSeed: clientSeed
+        };
+        resolve(res);
+      }
     }
   }
 

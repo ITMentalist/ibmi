@@ -1,5 +1,5 @@
 import Packet from './packet';
-import Signon from '../service/signon';
+import SignonService from '../service/signon-service';
 import crypto from 'crypto';
 
 /**
@@ -14,7 +14,7 @@ export class SignonSeedExchangeRequest extends Packet {
     super(52);
 
     this.length = 52;
-    this.serviceId = Signon.SERVICE.id;
+    this.serviceId = SignonService.SERVICE.id;
     this.requestResponseId = SignonSeedExchangeRequest.ID;
     this.templateLength = 0;
 
@@ -126,7 +126,7 @@ export class SignonSeedExchangeResponse extends Packet {
       this.length = 94;
       this.templateLength = 4;
       this.requestResponseId = SignonSeedExchangeResponse.ID;
-      this.serviceId = Signon.SERVICE.id;
+      this.serviceId = SignonService.SERVICE.id;
       this.serverVersion = 0;
       this.serverLevel = 0;
       this.passwordLevel = 0;

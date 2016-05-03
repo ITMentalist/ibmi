@@ -1,10 +1,11 @@
 'use strict';
 
-import Command from '../../src/service/command';
+import DataQueueService from '../../src/service/data-queue-service';
 import Packet from '../../src/packet/packet';
 import { RandomSeedExchangeRequest, RandomSeedExchangeResponse } from '../../src/packet/random-seed-exchange';
+import { StartServerRequest, StartServerResponse } from '../../src/packet/start-server';
 
-import SignonMock from '../mock/signon-mock';
+import SignonServiceMock from '../mock/signon-service-mock';
 
 import net from 'net';
 import crypto from 'crypto';
@@ -22,7 +23,7 @@ describe('IBMi', () => {
   beforeEach(() => {
     IBMi = proxyquire.load('../../src/ibmi',
                            {
-                             './service/signon': SignonMock
+                             './service/signon-service': SignonServiceMock
                            }).default;
   });
 
@@ -84,7 +85,8 @@ describe('IBMi', () => {
   describe('#getConnection()', () => {
 
     let connectionId, getServiceConnection, invalidRandomSeedExchangeResponse = false;
-    let createNewConnection;
+    let createNewConnection, randomSeedExchangeError = false, invalidStartServerResponse = false;
+    let startServerError = false;
 
     beforeEach(() => {
       let opts = {
@@ -113,6 +115,25 @@ describe('IBMi', () => {
           if (packet.requestResponseId == RandomSeedExchangeRequest.ID) {
             if (invalidRandomSeedExchangeResponse) {
               socket.write(new Buffer('bad'));
+            } else if (randomSeedExchangeError) {
+              let res = new RandomSeedExchangeResponse();
+              res.rc = 1;
+              socket.write(res.data);
+            } else {
+              let res = new RandomSeedExchangeResponse();
+              res.seed = crypto.randomBytes(8);
+              socket.write(res.data);
+            }
+          } else if (packet.requestResponseId == StartServerRequest.ID) {
+            if (invalidStartServerResponse) {
+              socket.write(new Buffer('bad'));
+            } else if (startServerError) {
+              let res = new StartServerResponse();
+              res.rc = 1;
+              socket.write(res.data);
+            } else {
+              let res = new StartServerResponse();
+              socket.write(res.data);
             }
           }
         });
@@ -124,28 +145,50 @@ describe('IBMi', () => {
       getServiceConnection.restore();
       mitm.disable();
       invalidRandomSeedExchangeResponse = false;
+      randomSeedExchangeError = false;
+      invalidStartServerResponse = false;
+      startServerError = false;
       createNewConnection.restore();
       ibmi.disconnectAll();
     });
 
     it('should fail due to invalid random seed exchange response', () => {
       invalidRandomSeedExchangeResponse = true;
-      return ibmi.getConnection(Command.SERVICE, connectionId).should.be.rejectedWith(/Invalid random seed exchange response/);
+      return ibmi.getConnection(DataQueueService.SERVICE, connectionId).should.be.rejectedWith(/Invalid random seed exchange response/);
+    });
+
+    it('should fail due to random seed exchange error', () => {
+      randomSeedExchangeError = true;
+      return ibmi.getConnection(DataQueueService.SERVICE, connectionId).should.be.rejectedWith(/Error received during start server/);
+    });
+
+    it('should fail due to invalid start server response', () => {
+      invalidStartServerResponse = true;
+      return ibmi.getConnection(DataQueueService.SERVICE, connectionId).should.be.rejectedWith(/Invalid start server response/);
+    });
+
+    it('should fail due to start server error', () => {
+      startServerError = true;
+      return ibmi.getConnection(DataQueueService.SERVICE, connectionId).should.be.rejectedWith(/Error received during start server/);
     });
 
     it('should get signon connection', () => {
-      return ibmi.getConnection(SignonMock.SERVICE, connectionId).should.eventually.have.property('socket');
+      return ibmi.getConnection(SignonServiceMock.SERVICE, connectionId).should.eventually.have.property('socket');
     });
 
     it('should get existing signon connection', (done) => {
       ibmi.connections.set(connectionId, { socket: {end:function(){}}});
-      ibmi.getConnection(SignonMock.SERVICE, connectionId).then((res) => {
+      ibmi.getConnection(SignonServiceMock.SERVICE, connectionId).then((res) => {
         res.should.have.property('socket');
         createNewConnection.called.should.equal(false);
         done();
       }).catch((err) => {
         done(err);
       });
+    });
+
+    it('should get non signon connection', () => {
+      return ibmi.getConnection(DataQueueService.SERVICE, connectionId).should.eventually.have.property('socket');
     });
 
   });

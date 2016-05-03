@@ -1,7 +1,7 @@
 'use strict';
 
 import Packet from './packet';
-import Signon from '../service/signon';
+import SignonService from '../service/signon-service';
 import PasswordConverter from '../util/password-converter';
 
 /**
@@ -30,7 +30,7 @@ export class SignonInfoRequest extends Packet {
     this.passwordLength = encryptedPassword.length;
 
     this.length = this.data.length;
-    this.serviceId = Signon.SERVICE.id;
+    this.serviceId = SignonService.SERVICE.id;
     this.templateLength = 1;
     this.requestResponseId = SignonInfoRequest.ID;
 
@@ -204,7 +204,7 @@ export class SignonInfoResponse extends Packet {
       this.length = 147;
       this.templateLength = 4;
       this.requestResponseId = SignonInfoResponse.ID;
-      this.serviceId = Signon.SERVICE.id;
+      this.serviceId = SignonService.SERVICE.id;
       this.rc = 0;
       this.currentSignonDate = null;
       this.lastSignonDate = null;
