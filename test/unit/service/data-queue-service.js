@@ -6,6 +6,7 @@ import Packet from '../../../src/packet/packet';
 import { DataQueueExchangeAttributesRequest, DataQueueExchangeAttributesResponse } from '../../../src/packet/data-queue-exchange-attributes';
 import { DataQueueWriteRequest } from '../../../src/packet/data-queue-write';
 import { DataQueueCreateRequest } from '../../../src/packet/data-queue-create';
+import { DataQueueDeleteRequest } from '../../../src/packet/data-queue-delete';
 import DataQueueReturnCodeResponse from '../../../src/packet/data-queue-return-code';
 
 import Mitm from 'mitm';
@@ -21,6 +22,7 @@ describe('DataQueueService', () => {
   let invalidExchangeAttributesResponseId = false, invalidWriteResponse = false;
   let invalidWriteResponseId = false, writeError = false;
   let invalidCreateResponse = false, invalidCreateResponseId = false, createError = false;
+  let invalidDeleteResponse = false, invalidDeleteResponseId = false, deleteError = false;
 
   beforeEach(() => {
     system = new IBMi({
@@ -91,6 +93,22 @@ describe('DataQueueService', () => {
             p.rc = 0xF000;
             socket.write(p.data);
           }
+        } else if (packet.requestResponseId == DataQueueDeleteRequest.ID) {
+          if (invalidDeleteResponse) {
+            socket.write(new Buffer('bad'));
+          } else if (invalidDeleteResponseId) {
+            let b = new Buffer(22);
+            b.fill(0);
+            socket.write(b);
+          } else if (deleteError) {
+            let p = new DataQueueReturnCodeResponse();
+            p.rc = 1;
+            socket.write(p.data);
+          } else {
+            let p = new DataQueueReturnCodeResponse();
+            p.rc = 0xF000;
+            socket.write(p.data);
+          }
         }
       });
     });
@@ -109,6 +127,9 @@ describe('DataQueueService', () => {
     invalidCreateResponse = false;
     invalidCreateResponseId = false;
     createError = false;
+    invalidDeleteResponse = false;
+    invalidDeleteResponseId = false;
+    deleteError = false;
     dataQueueService.attributesExchanged = false;
   });
 
@@ -198,6 +219,34 @@ describe('DataQueueService', () => {
 
     it('should succeed', () => {
       return dataQueueService.create('queue', 'library', 25, '*ALL', true, true, 0, false, 'DESCRIPTION').should.be.fulfilled;
+    });
+
+  });
+
+  describe('#delete()', () => {
+
+    it('should fail due to open error', () => {
+      mitm.disable();
+      return dataQueueService.delete('queue', 'library').should.be.rejectedWith(/ECONNREFUSED/);
+    });
+
+    it('should fail due to invalid response', () => {
+      invalidDeleteResponse = true;
+      return dataQueueService.delete('queue', 'library').should.be.rejectedWith(/Invalid delete response received/);
+    });
+
+    it('should fail due to invalid response ID', () => {
+      invalidDeleteResponseId = true;
+      return dataQueueService.delete('queue', 'library').should.be.rejectedWith(/Invalid delete response ID received/);
+    });
+
+    it('should fail due to error', () => {
+      deleteError = true;
+      return dataQueueService.delete('queue', 'library').should.be.rejectedWith(/Delete failed with code/);
+    });
+
+    it('should succeed', () => {
+      return dataQueueService.delete('queue', 'library').should.be.fulfilled;
     });
 
   });

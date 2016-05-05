@@ -68,4 +68,19 @@ export default class DataQueue {
     return res;
   }
 
+  /**
+   * Delete a data queue.
+   */
+  async delete() {
+    let res = null;
+    try {
+      debug('Attempt to delete %s', this.path);
+      res = await this.dataQueueService.delete(this.objectPath.objectName, this.objectPath.libraryName);
+    } catch (err) {
+      error('Failed to delete %s, %s', this.path, err);
+      throw(new Error('Failed to delete ' + this.path + ', ' + err));
+    }
+    return res;
+  }
+
 }

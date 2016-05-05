@@ -28,6 +28,7 @@ describe('DataQueue', () => {
     if (dataQueue) {
       dataQueue.dataQueueService.writeError = false;
       dataQueue.dataQueueService.createError = false;
+      dataQueue.dataQueueService.deleteError = false;
     }
   });
 
@@ -80,6 +81,19 @@ describe('DataQueue', () => {
 
     it('should succeed', () => {
       return dataQueue.write(new Buffer('DATA'), null).should.be.fulfilled;
+    });
+
+  });
+
+  describe('#delete()', () => {
+
+    it('should fail due to error', () => {
+      dataQueue.dataQueueService.deleteError = true;
+      return dataQueue.delete().should.be.rejectedWith(/Error: Delete error/);
+    });
+
+    it ('should succeed', () => {
+      return dataQueue.delete().should.be.fulfilled;
     });
 
   });

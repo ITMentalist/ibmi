@@ -74,7 +74,7 @@ describe('DataQueue', () => {
 
   });
 
-  /*describe('#write()', () => {
+  describe('#write()', () => {
 
     it('should fail to write', function() {
       this.timeout(10000);
@@ -88,6 +88,22 @@ describe('DataQueue', () => {
       return dq.write(new Buffer('DATA')).should.be.fulfilled;
     });
 
-  });*/
+  });
+
+  describe('#delete()', () => {
+
+    it('should fail to delete', function() {
+      this.timeout(10000);
+      let dq = new DataQueue(ibmi, '/QSYS.lib/SOMELIB.LIB/BAD.DTAQ');
+      return dq.delete().should.be.rejectedWith(/Failed to delete/);
+    });
+
+    it('should delete', function() {
+      this.timeout(10000);
+      let dq = new DataQueue(ibmi, queuePath);
+      return dq.delete().should.be.fulfilled;
+    });
+
+  });
 
 });

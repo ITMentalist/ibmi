@@ -6,6 +6,7 @@ export default class DataQueueService {
     this.system = system;
     this.writeError = false;
     this.createError = false;
+    this.deleteError = false;
   }
 
   create(name, library, entryLength, authority, saveSenderInfo, fifo, keyLength, forceStorage, description) {
@@ -22,6 +23,16 @@ export default class DataQueueService {
     return new Promise((resolve, reject) => {
       if (this.writeError) {
         reject(Error('Write error'));
+      } else {
+        resolve(true);
+      }
+    });
+  }
+
+  delete(name, library) {
+    return new Promise((resolve, reject) => {
+      if (this.deleteError) {
+        reject(Error('Delete error'));
       } else {
         resolve(true);
       }
