@@ -69,6 +69,21 @@ export default class DataQueue {
   }
 
   /**
+   * Clear the data queue.
+   */
+  async clear(key) {
+    let res = null;
+    try {
+      debug('Attempt to clear %s', this.path);
+      res = await this.dataQueueService.clear(this.objectPath.objectName, this.objectPath.libraryName, key);
+    } catch (err) {
+      error('Failed to clear %s, %s', this.path, err);
+      throw(new Error('Failed to clear ' + this.path + ', ' + err));
+    }
+    return res;
+  }
+
+  /**
    * Delete a data queue.
    */
   async delete() {

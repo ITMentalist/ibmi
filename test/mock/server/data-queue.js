@@ -9,6 +9,7 @@ import { DataQueueExchangeAttributesRequest, DataQueueExchangeAttributesResponse
 import { DataQueueWriteRequest } from '../../../src/packet/data-queue-write';
 import { DataQueueCreateRequest } from '../../../src/packet/data-queue-create';
 import { DataQueueDeleteRequest } from '../../../src/packet/data-queue-delete';
+import { DataQueueClearRequest } from '../../../src/packet/data-queue-clear';
 import DataQueueReturnCodeResponse from '../../../src/packet/data-queue-return-code';
 import PasswordConverter from '../../../src/util/password-converter';
 
@@ -83,6 +84,8 @@ export default class DataQueue {
         this.handleCreate(socket, packet);
       } else if (packet.requestResponseId == DataQueueDeleteRequest.ID) {
         this.handleDelete(socket, packet);
+      } else if (packet.requestResponseId == DataQueueClearRequest.ID) {
+        this.handleClear(socket, packet);
       }
     });
   }
@@ -137,6 +140,22 @@ export default class DataQueue {
 
   handleWrite(socket, req) {
     debug('Handling write');
+    let queue = req.data.slice(20, 30);
+    let library = req.data.slice(30, 40);
+    let resp = new DataQueueReturnCodeResponse();
+    if (queue.toString('hex') == 'e2d6d4c5d8e4c5e4c540') {
+      resp.rc = 0xF000;
+      resp.correlationId = req.correlationId;
+      socket.write(resp.data);
+    } else {
+      resp.rc = 1;
+      resp.correlationId = req.correlationId;
+      socket.write(resp.data);
+    }
+  }
+
+  handleClear(socket, req) {
+    debug('Handling clear');
     let queue = req.data.slice(20, 30);
     let library = req.data.slice(30, 40);
     let resp = new DataQueueReturnCodeResponse();

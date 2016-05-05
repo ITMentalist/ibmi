@@ -6,6 +6,7 @@ import { DataQueueExchangeAttributesRequest, DataQueueExchangeAttributesResponse
 import { DataQueueWriteRequest } from '../packet/data-queue-write';
 import { DataQueueCreateRequest } from '../packet/data-queue-create';
 import { DataQueueDeleteRequest } from '../packet/data-queue-delete';
+import { DataQueueClearRequest } from '../packet/data-queue-clear';
 import DataQueueReturnCodeResponse from '../packet/data-queue-return-code';
 import Converter from '../types/converter';
 
@@ -60,6 +61,22 @@ export default class DataQueueService extends Service {
         this.sendPacket(req);
       }).catch((err) => {
         error('Failed to create: %s', err);
+        reject(err);
+      });
+    });
+  }
+
+  clear(name, library, key) {
+    return new Promise((resolve, reject) => {
+      debug('Attempting to clear %s/%s on %s', library, name, this.system.hostName);
+      this.open().then(() => {
+        name = this.convertString(name, 10);
+        library = this.convertString(library, 10);
+        let req = new DataQueueClearRequest(name, library, key);
+        this.socket.once('data', this.handleClearResponse.bind(this, resolve, reject));
+        this.sendPacket(req);
+      }).catch((err) => {
+        error('Failed to clear: %s', err);
         reject(err);
       });
     });
@@ -159,6 +176,31 @@ export default class DataQueueService extends Service {
       } else {
         error('Invalid create response ID received from %s', this.system.hostName);
         reject(new Error('Invalid create response ID received from ' + this.system.hostName));
+      }
+    }
+  }
+
+  handleClearResponse(resolve, reject, data) {
+    debug('Clear response received from %s: %s', this.system.hostName, data.toString('hex'));
+    if (data.length < 22) {
+      error('Invalid clear response received from %s', this.system.hostName);
+      reject(new Error('Invalid clear response received from ' + this.system.hostName));
+    } else {
+      let resp = new Packet(data);
+      debug('Clear request response ID: %s', resp.requestResponseId.toString(16));
+      if (resp.requestResponseId == DataQueueReturnCodeResponse.ID) {
+        debug('Data queue return code response received from %s', this.system.hostName);
+        resp = new DataQueueReturnCodeResponse(data);
+        if (resp.rc != 0xF000) {
+          error('Clear failed with code %d from %s with message of %s', resp.rc, this.system.hostName, this.converter.bufferToString(resp.message));
+          reject(new Error('Clear failed with code ' + resp.rc + ' from ' + this.system.hostName + ' with message of ' + this.converter.bufferToString(resp.message)));
+        } else {
+          debug('Clear to %s succeeded', this.system.hostName);
+          resolve(true);
+        }
+      } else {
+        error('Invalid clear response ID received from %s', this.system.hostName);
+        reject(new Error('Invalid clear response ID received from ' + this.system.hostName));
       }
     }
   }

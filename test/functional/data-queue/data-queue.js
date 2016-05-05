@@ -90,6 +90,22 @@ describe('DataQueue', () => {
 
   });
 
+  describe('#clear()', () => {
+
+    it('should fail to clear', function() {
+      this.timeout(10000);
+      let dq = new DataQueue(ibmi, '/QSYS.lib/SOMELIB.LIB/BAD.DTAQ');
+      return dq.clear().should.be.rejectedWith(/Clear failed with code/);
+    });
+
+    it('should clear', function() {
+      this.timeout(10000);
+      let dq = new DataQueue(ibmi, queuePath);
+      return dq.clear().should.be.fulfilled;
+    });
+
+  });
+
   describe('#delete()', () => {
 
     it('should fail to delete', function() {

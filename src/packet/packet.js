@@ -80,9 +80,10 @@ export default class Packet {
         offset = self.data.length;
       }
     }
-    if (offset == self.data.length) {
+    if (offset >= self.data.length) {
       return null;
     }
+
     let start = offset + 6;
     let end = start + (length - 6);
     return self.data.slice(start, end);
