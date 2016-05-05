@@ -114,6 +114,19 @@ export default class DataQueueService extends Service {
     });
   }
 
+  read(name, library, search, wait, peek, key) {
+    return new Promise((resolve, reject) => {
+      debug('Attempting to read from %s/%s on %s', library, name, this.system.hostName);
+      this.open().then(() => {
+        name = this.convertString(name, 10);
+        library = this.convertString(library, 10);
+      }).catch((err) => {
+        error('Failed to read: %s', err);
+        reject(err);
+      });
+    });
+  }
+
   convertString(str, len) {
     let b = this.converter.stringToBuffer(str);
     let res = new Buffer(len);

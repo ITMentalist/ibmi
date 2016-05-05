@@ -16,6 +16,9 @@ the Java code. This in pure Javascript.
 | ----------- | ----------------------------| ----- |
 | Port Mapper | Locate service port by name |       |
 | Signon      | Signon to system            |       |
+| Data queue  | Create data queue           |       |
+| Data queue  | Delete data queue           |       |
+| Data queue  | Clear data queue            |       |
 | Data queue  | Write to data queue         |       |
 
 API
@@ -97,3 +100,12 @@ ibmi.signon().then((res) => {
   console.log('Error! %s', err);
 });
 ```
+--------------
+
+### DataQueue class
+
+The DataQueue class allows you to perform operations on a data queue.
+
+### Constructor(system, path)
+
+Remote system and data queue path.
