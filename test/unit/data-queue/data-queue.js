@@ -1,13 +1,16 @@
 'use strict';
 
-import DataQueue from '../../../src/data-queue/data-queue';
 import IBMi from '../../../src/ibmi';
+
+import DataQueueServiceMock from '../../mock/data-queue-service-mock';
 
 require('../../common');
 
+const proxyquire = require('proxyquire').noCallThru();
+
 describe('DataQueue', () => {
 
-  let system, dataQueue;
+  let DataQueue, system, dataQueue;
 
   beforeEach(() => {
     system = new IBMi({
@@ -15,6 +18,17 @@ describe('DataQueue', () => {
       userId: 'GOOD',
       password: 'GOOD'
     });
+    DataQueue = proxyquire.load('../../../src/data-queue/data-queue',
+                           {
+                             '../service/data-queue-service': DataQueueServiceMock
+                           }).default;
+  });
+
+  afterEach(() => {
+    if (dataQueue) {
+      dataQueue.dataQueueService.writeError = false;
+      dataQueue.dataQueueService.createError = false;
+    }
   });
 
   describe('#constructor()', () => {
@@ -32,10 +46,40 @@ describe('DataQueue', () => {
 
   });
 
+  describe('#create()', () => {
+
+    it('should fail due to error', () => {
+      dataQueue.dataQueueService.createError = true;
+      return dataQueue.create(25).should.be.rejectedWith(/Failed to create/);
+    });
+
+    it('should succeed with default options', () => {
+      return dataQueue.create(25).should.be.fulfilled;
+    });
+
+    it('should succeed with specfied options', () => {
+      let opts = {
+        authority: '*LIBCRTAUT',
+        saveSenderInfo: false,
+        fifo: true,
+        keyLength: 0,
+        forceStorage: false,
+        description: 'Queue'
+      };
+      return dataQueue.create(25, opts).should.be.fulfilled;
+    });
+
+  });
+
   describe('#write()', () => {
 
-    it('should fail to write due invalid input', () => {
-      return dataQueue.write().should.be.rejectedWith(/Invalid data/);
+    it('should fail due to error', () => {
+      dataQueue.dataQueueService.writeError = true;
+      return dataQueue.write(new Buffer('DATA'), null).should.be.rejectedWith(/Error: Write error/);
+    });
+
+    it('should succeed', () => {
+      return dataQueue.write(new Buffer('DATA'), null).should.be.fulfilled;
     });
 
   });

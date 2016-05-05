@@ -29,21 +29,43 @@ export default class DataQueue {
   }
 
   /**
+   * Create a data queue.
+   */
+  async create(entryLength, opts) {
+    let res = null;
+    try {
+      opts = opts || {
+        authority: '*LIBCRTAUT',
+        saveSenderInfo: false,
+        fifo: true,
+        keyLength: 0,
+        forceStorage: false,
+        description: 'Queue'
+      };
+      debug('Attempt to create data queue at path %s with length of %d', this.path, entryLength);
+      res = await this.dataQueueService.create(this.objectPath.objectName, this.objectPath.libraryName, entryLength,
+                                               opts.authority, opts.saveSenderInfo, opts.fifo, opts.keyLength,
+                                               opts.forceStorage, opts.description);
+    } catch (err) {
+      error('Failed to create %s with opts %j', this.path, opts);
+      throw new Error('Failed to create ' + this.path);
+    }
+    return res;
+  }
+
+  /**
    * Write data out to the data queue.
    */
   async write(data, key) {
-    if (!Buffer.isBuffer(data)) {
-      throw new Error('Invalid data');
+    let res = null;
+    try {
+      debug('Attempt to write %s to %s', data.toString('hex'), this.path);
+      res = await this.dataQueueService.write(this.objectPath.objectName, this.objectPath.libraryName, key, data);
+    } catch (err) {
+      error('Failed to write to %s, %s', this.path, err);
+      throw(new Error('Failed to write to ' + this.path + ', ' + err));
     }
-    debug('Attempt to write %s to %s', data.toString('hex'), this.path);
-    let res = await this.dataQueueService.write(this.objectPath.objectName, this.objectPath.libraryName, key, data);
-    /*return new Promise((resolve, reject) => {
-      if (!Buffer.isBuffer(data)) {
-        reject(new Error('Invalid data'));
-      } else {
-        debug('Attempt to write %s to %s', data.toString('hex'), this.path);
-      }
-    });*/
+    return res;
   }
 
 }

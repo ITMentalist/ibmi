@@ -9,6 +9,8 @@ import coveralls from 'gulp-coveralls';
 import minimist from 'minimist';
 import eslint from 'gulp-eslint';
 
+import Server from './test/mock/server/server';
+
 const isparta = require('isparta');
 
 let watching = false;
@@ -144,6 +146,13 @@ gulp.task('coveralls', [ 'functionalTest' ], () => {
 
 gulp.task('travisTest', [ 'coveralls' ]);
 
+gulp.task('server', () => {
+  let server = new Server(9449);
+  server.start().then((res) => {
+  }).catch((err) => {
+    console.log('Could not start server: ' + err);
+  });
+});
 
 /**
  * Default task.

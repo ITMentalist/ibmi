@@ -4,6 +4,7 @@ import Service from './service';
 import Packet from '../packet/packet';
 import { DataQueueExchangeAttributesRequest, DataQueueExchangeAttributesResponse } from '../packet/data-queue-exchange-attributes';
 import { DataQueueWriteRequest } from '../packet/data-queue-write';
+import { DataQueueCreateRequest } from '../packet/data-queue-create';
 import DataQueueReturnCodeResponse from '../packet/data-queue-return-code';
 import Converter from '../types/converter';
 
@@ -46,12 +47,30 @@ export default class DataQueueService extends Service {
     }
   }
 
+  create(name, library, entryLength, authority, saveSenderInfo, fifo, keyLength, forceStorage, description) {
+    return new Promise((resolve, reject) => {
+      debug('Attempting to create %s/%s on %s', library, name, this.system.hostName);
+      this.open().then(() => {
+        name = this.convertString(name, 10);
+        library = this.convertString(library, 10);
+        description = this.convertString(description, 50);
+        let req = new DataQueueCreateRequest(name, library, entryLength, authority, saveSenderInfo, fifo, keyLength, forceStorage, description);
+        this.socket.once('data', this.handleCreateResponse.bind(this, resolve, reject));
+        this.sendPacket(req);
+      }).catch((err) => {
+        error('Failed to create: %s', err);
+        reject(err);
+      });
+    });
+  }
+
   write(name, library, key, data) {
     return new Promise((resolve, reject) => {
       debug('Attempting to write %s with key %s to %s/%s on %s', data.toString('hex'), key, library, name, this.system.hostName);
       this.open().then(() => {
-        let nameAndLibrary = this.convertNameAndLibrary(name, library);
-        let req = new DataQueueWriteRequest(nameAndLibrary.name, nameAndLibrary.library, key, data);
+        name = this.convertString(name, 10);
+        library = this.convertString(library, 10);
+        let req = new DataQueueWriteRequest(name, library, key, data);
         this.socket.once('data', this.handleWriteResponse.bind(this, resolve, reject));
         this.sendPacket(req);
       }).catch((err) => {
@@ -61,19 +80,12 @@ export default class DataQueueService extends Service {
     });
   }
 
-  convertNameAndLibrary(_name, _library) {
-    let b = this.converter.stringToBuffer(_name);
-    let name = new Buffer(10);
-    name.fill(0x40);
-    b.copy(name, 0, 0, 10);
-    b = this.converter.stringToBuffer(_library);
-    let library = new Buffer(10);
-    library.fill(0x40);
-    b.copy(library, 0, 0, 10);
-    return {
-      name: name,
-      library: library
-    };
+  convertString(str, len) {
+    let b = this.converter.stringToBuffer(str);
+    let res = new Buffer(len);
+    res.fill(0x40);
+    b.copy(res, 0, 0, len);
+    return res;
   }
 
   exchangeAttributes() {
@@ -109,6 +121,31 @@ export default class DataQueueService extends Service {
     }
   }
 
+  handleCreateResponse(resolve, reject, data) {
+    debug('Create response received from %s: %s', this.system.hostName, data.toString('hex'));
+    if (data.length < 22) {
+      error('Invalid create response received from %s', this.system.hostName);
+      reject(new Error('Invalid create response received from ' + this.system.hostName));
+    } else {
+      let resp = new Packet(data);
+      debug('Create request response ID: %s', resp.requestResponseId.toString(16));
+      if (resp.requestResponseId == DataQueueReturnCodeResponse.ID) {
+        debug('Data queue return code response received from %s', this.system.hostName);
+        resp = new DataQueueReturnCodeResponse(data);
+        if (resp.rc != 0xF000) {
+          error('Create failed with code %d from %s with message of %s', resp.rc, this.system.hostName, this.converter.bufferToString(resp.message));
+          reject(new Error('Create failed with code ' + resp.rc + ' from ' + this.system.hostName + ' with message of ' + this.converter.bufferToString(resp.message)));
+        } else {
+          debug('Create to %s succeeded', this.system.hostName);
+          resolve(true);
+        }
+      } else {
+        error('Invalid create response ID received from %s', this.system.hostName);
+        reject(new Error('Invalid create response ID received from ' + this.system.hostName));
+      }
+    }
+  }
+
   handleWriteResponse(resolve, reject, data) {
     debug('Write response received from %s: %s', this.system.hostName, data.toString('hex'));
     if (data.length < 22) {
@@ -116,7 +153,7 @@ export default class DataQueueService extends Service {
       reject(new Error('Invalid write response received from ' + this.system.hostName));
     } else {
       let resp = new Packet(data);
-      debug('Exchange attributes request response ID: %s', resp.requestResponseId.toString(16));
+      debug('Write request response ID: %s', resp.requestResponseId.toString(16));
       if (resp.requestResponseId == DataQueueReturnCodeResponse.ID) {
         debug('Data queue return code response received from %s', this.system.hostName);
         resp = new DataQueueReturnCodeResponse(data);

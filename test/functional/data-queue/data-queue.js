@@ -58,7 +58,23 @@ describe('DataQueue', () => {
     }
   });
 
-  describe('#write()', () => {
+  describe('#create()', () => {
+
+    it('should fail to create', function() {
+      this.timeout(10000);
+      let dq = new DataQueue(ibmi, '/QSYS.lib/SOMELIB.LIB/BAD.DTAQ');
+      return dq.create(25).should.be.rejectedWith(/Failed to create/);
+    });
+
+    it('should create', function() {
+      this.timeout(10000);
+      let dq = new DataQueue(ibmi, queuePath);
+      return dq.create(25).should.be.fulfilled;
+    });
+
+  });
+
+  /*describe('#write()', () => {
 
     it('should fail to write', function() {
       this.timeout(10000);
@@ -72,6 +88,6 @@ describe('DataQueue', () => {
       return dq.write(new Buffer('DATA')).should.be.fulfilled;
     });
 
-  });
+  });*/
 
 });

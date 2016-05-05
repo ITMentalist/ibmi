@@ -28,7 +28,7 @@ export class DataQueueWriteRequest extends Packet {
   }
 
   get name() {
-    return this.data.slice(20, 29);
+    return this.data.slice(20, 30);
   }
 
   set name(val) {
@@ -36,7 +36,7 @@ export class DataQueueWriteRequest extends Packet {
   }
 
   get library() {
-    return this.data.slice(30, 39);
+    return this.data.slice(30, 40);
   }
 
   set library(val) {

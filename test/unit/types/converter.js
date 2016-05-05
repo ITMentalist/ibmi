@@ -36,4 +36,24 @@ describe('Converter', () => {
 
   });
 
+  describe('#bufferToString()', () => {
+
+    beforeEach(() => {
+      converter = new Converter();
+    });
+
+    it('should not convert', () => {
+      let s = converter.bufferToString(null);
+      should.not.exist(s);
+    });
+
+    it('should convert buffer to string', () => {
+      let b = new Buffer('a2969485a2a399899587', 'hex');
+      let s = converter.bufferToString(b);
+      should.exist(s);
+      s.should.equal('somestring');
+    });
+
+  });
+
 });

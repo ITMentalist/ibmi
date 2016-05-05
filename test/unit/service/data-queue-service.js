@@ -5,6 +5,7 @@ import IBMi from '../../../src/ibmi';
 import Packet from '../../../src/packet/packet';
 import { DataQueueExchangeAttributesRequest, DataQueueExchangeAttributesResponse } from '../../../src/packet/data-queue-exchange-attributes';
 import { DataQueueWriteRequest } from '../../../src/packet/data-queue-write';
+import { DataQueueCreateRequest } from '../../../src/packet/data-queue-create';
 import DataQueueReturnCodeResponse from '../../../src/packet/data-queue-return-code';
 
 import Mitm from 'mitm';
@@ -19,6 +20,7 @@ describe('DataQueueService', () => {
   let invalidExchangeAttributesResponse = false, exchangeAttributeError = false;
   let invalidExchangeAttributesResponseId = false, invalidWriteResponse = false;
   let invalidWriteResponseId = false, writeError = false;
+  let invalidCreateResponse = false, invalidCreateResponseId = false, createError = false;
 
   beforeEach(() => {
     system = new IBMi({
@@ -73,6 +75,22 @@ describe('DataQueueService', () => {
             p.rc = 0xF000;
             socket.write(p.data);
           }
+        } else if (packet.requestResponseId == DataQueueCreateRequest.ID) {
+          if (invalidCreateResponse) {
+            socket.write(new Buffer('bad'));
+          } else if (invalidCreateResponseId) {
+            let b = new Buffer(22);
+            b.fill(0);
+            socket.write(b);
+          } else if (createError) {
+            let p = new DataQueueReturnCodeResponse();
+            p.rc = 1;
+            socket.write(p.data);
+          } else {
+            let p = new DataQueueReturnCodeResponse();
+            p.rc = 0xF000;
+            socket.write(p.data);
+          }
         }
       });
     });
@@ -88,6 +106,9 @@ describe('DataQueueService', () => {
     invalidWriteResponse = false;
     invalidWriteResponseId = false;
     writeError = false;
+    invalidCreateResponse = false;
+    invalidCreateResponseId = false;
+    createError = false;
     dataQueueService.attributesExchanged = false;
   });
 
@@ -149,6 +170,34 @@ describe('DataQueueService', () => {
     it('should succeed and not exchange attributes', () => {
       dataQueueService.attributesExchanged = true;
       return dataQueueService.write('queue', 'library', null, new Buffer('DATA')).should.be.fulfilled;
+    });
+
+  });
+
+  describe('#create()', () => {
+
+    it('should fail due to open error', () => {
+      mitm.disable();
+      return dataQueueService.create('queue', 'library', 25, '*ALL', true, true, 0, false, 'DESCRIPTION').should.be.rejectedWith(/ECONNREFUSED/);
+    });
+
+    it('should fail due to invalid response', () => {
+      invalidCreateResponse = true;
+      return dataQueueService.create('queue', 'library', 25, '*ALL', true, true, 0, false, 'DESCRIPTION').should.be.rejectedWith(/Invalid create response received/);
+    });
+
+    it('should fail due to invalid response ID', () => {
+      invalidCreateResponseId = true;
+      return dataQueueService.create('queue', 'library', 25, '*ALL', true, true, 0, false, 'DESCRIPTION').should.be.rejectedWith(/Invalid create response ID received/);
+    });
+
+    it('should fail due to error', () => {
+      createError = true;
+      return dataQueueService.create('queue', 'library', 25, '*ALL', true, true, 0, false, 'DESCRIPTION').should.be.rejectedWith(/Create failed with code/);
+    });
+
+    it('should succeed', () => {
+      return dataQueueService.create('queue', 'library', 25, '*ALL', true, true, 0, false, 'DESCRIPTION').should.be.fulfilled;
     });
 
   });

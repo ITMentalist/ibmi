@@ -10,7 +10,6 @@ export class DataQueueExchangeAttributesRequest extends Packet {
     this.length = 26;
     this.serviceId = DataQueueService.SERVICE.id;
     this.templateLength = this.length - 20;
-    //this.requestResponseId = DataQueueExchangeAttributesRequest.ID;
     this.clientVersion = 0x00000001;
   }
 
@@ -20,10 +19,6 @@ export class DataQueueExchangeAttributesRequest extends Packet {
 
   set clientVersion(val) {
     this.set32Bit(val, 20);
-  }
-
-  static get ID() {
-    return 0x8000;
   }
 
 }
