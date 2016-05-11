@@ -1,6 +1,6 @@
 'use strict';
 
-import { DataQueueReadRequest } from '../../../src/packet/data-queue-read';
+import { DataQueueReadRequest, DataQueueReadResponse } from '../../../src/packet/data-queue-read';
 
 require('../../common');
 
@@ -35,6 +35,43 @@ describe('DataQueueReadRequest', () => {
       console.log(p.data.toString('hex'));
     });
 
+  });
+
+});
+
+describe('DataQueueReadResponse', () => {
+
+  it('should create new instance', () => {
+    let p = new DataQueueReadResponse();
+    p.length.should.equal(58);
+    p.templateLength.should.equal(38);
+    p.serviceId.should.equal(0xE007);
+    p.requestResponseId.should.equal(0x8003);
+    p.senderInfo.toString('hex').should.equal('000000000000000000000000000000000000000000000000000000000000000000000000');
+    let sender = new Buffer(36);
+    sender.fill(0xFF);
+    p.senderInfo = sender;
+    p.senderInfo.toString('hex').should.equal('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+    let entry = new Buffer('ENTRY');
+    p.entry = entry;
+    p.entry.toString().should.equal('ENTRY');
+    let key = new Buffer('KEY');
+    p.key = key;
+    p.key.toString().should.equal('KEY');
+    p.length.should.equal(78);
+    console.log(p.data.toString('hex'));
+  });
+
+  it('should create from existing', () => {
+    let p = new DataQueueReadResponse(new Buffer('0000004e0000e0070000000000000000002680030000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000b5002454e5452590000000950034b4559', 'hex'));
+    p.templateLength.should.equal(38);
+    p.serviceId.should.equal(0xE007);
+    p.requestResponseId.should.equal(0x8003);
+    p.senderInfo.toString('hex').should.equal('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+    p.length.should.equal(78);
+    p.entry.toString().should.equal('ENTRY');
+    p.key.toString().should.equal('KEY');
+    console.log(p.data.toString('hex'));
   });
 
 });

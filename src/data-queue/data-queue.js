@@ -2,6 +2,7 @@
 
 import ObjectPath from '../qsys/object-path';
 import DataQueueService from '../service/data-queue-service';
+import DataQueueEntry from './data-queue-entry';
 
 const debug = require('debug')('ibmi:data-queue:data-queue');
 let error = require('debug')('ibmi:data-queue:data-queue:error');
@@ -49,6 +50,48 @@ export default class DataQueue {
     } catch (err) {
       error('Failed to create %s with opts %j', this.path, opts);
       throw new Error('Failed to create ' + this.path);
+    }
+    return res;
+  }
+
+  /**
+   * Peek into the data queue.
+   */
+  async peek(wait) {
+    wait = wait || 0;
+
+    let res = null;
+
+    try {
+      debug('Attempt to peek into %s', this.path);
+      let data = await this.dataQueueService.read(this.objectPath.objectName, this.objectPath.libraryName, null, wait, true, null);
+      if (data) {
+        res = new DataQueueEntry(data.entry, data.sender, data.converter);
+      }
+    } catch (err) {
+      error('Failed to peek into %s, %s', this.path, err);
+      throw(new Error('Failed to peek into ' + this.path + ', ' + err));
+    }
+    return res;
+  }
+
+  /**
+   * Read from the data queue.
+   */
+  async read(wait) {
+    wait = wait || 0;
+
+    let res = null;
+
+    try {
+      debug('Attempt to read from %s', this.path);
+      let data = await this.dataQueueService.read(this.objectPath.objectName, this.objectPath.libraryName, null, wait, false, null);
+      if (data) {
+        res = new DataQueueEntry(data.entry, data.sender, data.converter);
+      }
+    } catch (err) {
+      error('Failed to read from %s, %s', this.path, err);
+      throw(new Error('Failed to read from ' + this.path + ', ' + err));
     }
     return res;
   }

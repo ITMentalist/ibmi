@@ -8,6 +8,8 @@ export default class DataQueueService {
     this.createError = false;
     this.deleteError = false;
     this.clearError = false;
+    this.readError = false;
+    this.readEmpty = false;
   }
 
   create(name, library, entryLength, authority, saveSenderInfo, fifo, keyLength, forceStorage, description) {
@@ -16,6 +18,26 @@ export default class DataQueueService {
         reject(new Error('Create error'));
       } else {
         resolve(true);
+      }
+    });
+  }
+
+  read(name, library, search, wait, peek, key) {
+    return new Promise((resolve, reject) => {
+      if (this.readError) {
+        reject(new Error('Read error'));
+      } else {
+        if (this.readEmpty) {
+          resolve(null);
+        } else {
+          resolve({
+            senderInfo: new Buffer('SENDER'),
+            entry: new Buffer('ENTRY'),
+            key: new Buffer('KEY'),
+            converter: {
+            }
+          });
+        }
       }
     });
   }

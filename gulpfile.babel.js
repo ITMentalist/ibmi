@@ -76,7 +76,7 @@ gulp.task('transpile', [ 'eslint' ], () => {
  */
 gulp.task('instrument', [ 'transpile' ], () => {
   let includeUntested = (unitOptions.spec == unitTestSrc);
-  return gulp.src([ './src/**/*.js' ])
+  return gulp.src([ './src/**/*.js', '!./src/index.js' ])
     .pipe(istanbul({
       instrumenter: isparta.Instrumenter,
       includeUntested: includeUntested

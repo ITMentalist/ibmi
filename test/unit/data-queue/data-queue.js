@@ -30,6 +30,8 @@ describe('DataQueue', () => {
       dataQueue.dataQueueService.createError = false;
       dataQueue.dataQueueService.deleteError = false;
       dataQueue.dataQueueService.clearError = false;
+      dataQueue.dataQueueService.readError = false;
+      dataQueue.dataQueueService.readEmpty = false;
     }
   });
 
@@ -108,6 +110,68 @@ describe('DataQueue', () => {
 
     it ('should succeed', () => {
       return dataQueue.delete().should.be.fulfilled;
+    });
+
+  });
+
+  describe('#read()', () => {
+
+    it('should fail due to error', () => {
+      dataQueue.dataQueueService.readError = true;
+      return dataQueue.read().should.be.rejectedWith(/Error: Read error/);
+    });
+
+    it('should succeed with default options', (done) => {
+      dataQueue.read().then((res) => {
+        should.exist(res);
+        res.should.have.property('data');
+        res.should.have.property('senderInfo');
+        res.should.have.property('converter');
+        done();
+      }).catch((err) => {
+        done(err);
+      });
+    });
+
+    it('should succeed and read nothing', (done) => {
+      dataQueue.dataQueueService.readEmpty = true;
+      dataQueue.read().then((res) => {
+        should.not.exist(res);
+        done();
+      }).catch((err) => {
+        done(err);
+      });
+    });
+
+  });
+
+  describe('#peek()', () => {
+
+    it('should fail due to error', () => {
+      dataQueue.dataQueueService.readError = true;
+      return dataQueue.peek().should.be.rejectedWith(/Error: Read error/);
+    });
+
+    it('should succeed with default options', (done) => {
+      dataQueue.peek().then((res) => {
+        should.exist(res);
+        res.should.have.property('data');
+        res.should.have.property('senderInfo');
+        res.should.have.property('converter');
+        done();
+      }).catch((err) => {
+        done(err);
+      });
+    });
+
+    it('should succeed and read nothing', (done) => {
+      dataQueue.dataQueueService.readEmpty = true;
+      dataQueue.peek().then((res) => {
+        should.not.exist(res);
+        done();
+      }).catch((err) => {
+        done(err);
+      });
     });
 
   });

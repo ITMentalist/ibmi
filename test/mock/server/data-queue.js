@@ -7,6 +7,7 @@ import { RandomSeedExchangeRequest, RandomSeedExchangeResponse } from '../../../
 import { StartServerRequest, StartServerResponse } from '../../../src/packet/start-server';
 import { DataQueueExchangeAttributesRequest, DataQueueExchangeAttributesResponse } from '../../../src/packet/data-queue-exchange-attributes';
 import { DataQueueWriteRequest } from '../../../src/packet/data-queue-write';
+import { DataQueueReadRequest, DataQueueReadResponse } from '../../../src/packet/data-queue-read';
 import { DataQueueCreateRequest } from '../../../src/packet/data-queue-create';
 import { DataQueueDeleteRequest } from '../../../src/packet/data-queue-delete';
 import { DataQueueClearRequest } from '../../../src/packet/data-queue-clear';
@@ -23,6 +24,7 @@ export default class DataQueue {
   constructor() {
     this.connections = new Map();
     this.port = 8472;
+    this.data = [ ];
   }
 
   async start() {
@@ -86,6 +88,8 @@ export default class DataQueue {
         this.handleDelete(socket, packet);
       } else if (packet.requestResponseId == DataQueueClearRequest.ID) {
         this.handleClear(socket, packet);
+      } else if (packet.requestResponseId == DataQueueReadRequest.ID) {
+        this.handleRead(socket, packet);
       }
     });
   }
@@ -140,13 +144,48 @@ export default class DataQueue {
 
   handleWrite(socket, req) {
     debug('Handling write');
+    req.templateLength = 22;
     let queue = req.data.slice(20, 30);
     let library = req.data.slice(30, 40);
     let resp = new DataQueueReturnCodeResponse();
     if (queue.toString('hex') == 'e2d6d4c5d8e4c5e4c540') {
+      let data = req.getField(DataQueueWriteRequest.ENTRY);
+      this.data.push(data);
       resp.rc = 0xF000;
       resp.correlationId = req.correlationId;
       socket.write(resp.data);
+    } else {
+      resp.rc = 1;
+      resp.correlationId = req.correlationId;
+      socket.write(resp.data);
+    }
+  }
+
+  handleRead(socket, req) {
+    debug('Handling read');
+    debug(this.data);
+    let queue = req.data.slice(20, 30);
+    let library = req.data.slice(30, 40);
+    let resp = new DataQueueReturnCodeResponse();
+    if (queue.toString('hex') == 'e2d6d4c5d8e4c5e4c540') {
+      if (this.data.length > 0) {
+        debug('Data queue in, return it');
+        let returnData;
+        if (req.data[47] == 0xF1) {
+          returnData = this.data[0];
+        } else {
+          returnData = this.data.shift();
+        }
+        resp = new DataQueueReadResponse();
+        resp.entry = returnData;
+        resp.correlationId = req.correlationId;
+        socket.write(resp.data);
+      } else {
+        debug('No data in queue');
+        resp.rc = 0xF006;
+        resp.correlationId = req.correlationId;
+        socket.write(resp.data);
+      }
     } else {
       resp.rc = 1;
       resp.correlationId = req.correlationId;

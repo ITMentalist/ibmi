@@ -8,6 +8,7 @@ import { DataQueueWriteRequest } from '../../../src/packet/data-queue-write';
 import { DataQueueCreateRequest } from '../../../src/packet/data-queue-create';
 import { DataQueueDeleteRequest } from '../../../src/packet/data-queue-delete';
 import { DataQueueClearRequest } from '../../../src/packet/data-queue-clear';
+import { DataQueueReadRequest, DataQueueReadResponse } from '../../../src/packet/data-queue-read';
 import DataQueueReturnCodeResponse from '../../../src/packet/data-queue-return-code';
 
 import Mitm from 'mitm';
@@ -25,6 +26,8 @@ describe('DataQueueService', () => {
   let invalidCreateResponse = false, invalidCreateResponseId = false, createError = false;
   let invalidDeleteResponse = false, invalidDeleteResponseId = false, deleteError = false;
   let invalidClearResponse = false, invalidClearResponseId = false, clearError = false;
+  let invalidReadResponse = false, invalidReadResponseId = false, readError = false;
+  let readEmpty = false;
 
   beforeEach(() => {
     system = new IBMi({
@@ -127,6 +130,28 @@ describe('DataQueueService', () => {
             p.rc = 0xF000;
             socket.write(p.data);
           }
+        } else if (packet.requestResponseId == DataQueueReadRequest.ID) {
+          if (invalidReadResponse) {
+            socket.write(new Buffer('bad'));
+          } else if (invalidReadResponseId) {
+            let b = new Buffer(22);
+            b.fill(0);
+            socket.write(b);
+          } else if (readError) {
+            let p = new DataQueueReturnCodeResponse();
+            p.rc = 1;
+            socket.write(p.data);
+          } else if (readEmpty) {
+            let p = new DataQueueReturnCodeResponse();
+            p.rc = 0xF006;
+            socket.write(p.data);
+          } else {
+            let p = new DataQueueReadResponse();
+            p.senderInfo = new Buffer('SENDER');
+            p.entry = new Buffer('DATA');
+            p.key = new Buffer('KEY');
+            socket.write(p.data);
+          }
         }
       });
     });
@@ -151,6 +176,10 @@ describe('DataQueueService', () => {
     invalidClearResponse = false;
     invalidClearResponseId = false;
     clearError = false;
+    invalidReadResponse = false;
+    invalidReadResponseId = false;
+    readError = false;
+    readEmpty = false;
     dataQueueService.attributesExchanged = false;
   });
 
@@ -296,6 +325,64 @@ describe('DataQueueService', () => {
 
     it('should succeed', () => {
       return dataQueueService.clear('queue', 'library', null).should.be.fulfilled;
+    });
+
+  });
+
+  describe('#read()', () => {
+
+    it('should fail due to open error', () => {
+      mitm.disable();
+      return dataQueueService.read('queue', 'library', null, 0, false, null).should.be.rejectedWith(/ECONNREFUSED/);
+    });
+
+    it('should fail due to invalid response', () => {
+      invalidReadResponse = true;
+      return dataQueueService.read('queue', 'library', null, 0, false, null).should.be.rejectedWith(/Invalid read response received/);
+    });
+
+    it('should fail due to invalid respose ID', () => {
+      invalidReadResponseId = true;
+      return dataQueueService.read('queue', 'library', null, 0, false, null).should.be.rejectedWith(/Invalid read response ID received/);
+    });
+
+    it('should faile due to error', () => {
+      readError = true;
+      return dataQueueService.read('queue', 'library', null, 0, false, null).should.be.rejectedWith(/Read failed with code 1/);
+    });
+
+    it('should succed with no data', (done) => {
+      readEmpty = true;
+      dataQueueService.read('queue', 'library', null, 0, false, null).then((res) => {
+        should.not.exist(res);
+        done();
+      }).catch((err) => {
+        done(err);
+      });
+    });
+
+    it('should succeed', (done) => {
+      dataQueueService.read('queue', 'library', null, 0, false, null).then((res) => {
+        should.exist(res);
+        res.should.have.property('sender');
+        res.should.have.property('entry');
+        done();
+      }).catch((err) => {
+        done(err);
+      });
+    });
+
+    it('should succeed with search and key', (done) => {
+      dataQueueService.read('queue', 'library', new Buffer('**'), 0, false, new Buffer('KEY')).then((res) => {
+        should.exist(res);
+        res.should.have.property('sender');
+        res.should.have.property('entry');
+        res.should.have.property('key');
+        res.should.have.property('converter');
+        done();
+      }).catch((err) => {
+        done(err);
+      });
     });
 
   });

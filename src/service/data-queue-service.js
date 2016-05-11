@@ -7,6 +7,7 @@ import { DataQueueWriteRequest } from '../packet/data-queue-write';
 import { DataQueueCreateRequest } from '../packet/data-queue-create';
 import { DataQueueDeleteRequest } from '../packet/data-queue-delete';
 import { DataQueueClearRequest } from '../packet/data-queue-clear';
+import { DataQueueReadRequest, DataQueueReadResponse } from '../packet/data-queue-read';
 import DataQueueReturnCodeResponse from '../packet/data-queue-return-code';
 import Converter from '../types/converter';
 
@@ -120,6 +121,15 @@ export default class DataQueueService extends Service {
       this.open().then(() => {
         name = this.convertString(name, 10);
         library = this.convertString(library, 10);
+        if (key) {
+          search = this.convertString(search, 2);
+        } else {
+          search = new Buffer(2);
+          search.fill(0);
+        }
+        let req = new DataQueueReadRequest(name, library, search, wait, peek, key);
+        this.socket.once('data', this.handleReadResponse.bind(this, resolve, reject));
+        this.sendPacket(req);
       }).catch((err) => {
         error('Failed to read: %s', err);
         reject(err);
@@ -239,6 +249,42 @@ export default class DataQueueService extends Service {
       } else {
         error('Invalid delete response ID received from %s', this.system.hostName);
         reject(new Error('Invalid delete response ID received from ' + this.system.hostName));
+      }
+    }
+  }
+
+  handleReadResponse(resolve, reject, data) {
+    debug('Read response received from %s: %s', this.system.hostName, data.toString('hex'));
+    if (data.length < 22) {
+      error('Invalid read response received from %s', this.system.hostName);
+      reject(new Error('Invalid read response received from ' + this.system.hostName));
+    } else {
+      let resp = new Packet(data);
+      debug('Read request response ID: %s', resp.requestResponseId.toString(16));
+      if (resp.requestResponseId == DataQueueReturnCodeResponse.ID) {
+        debug('Data queue return code response received from %s', this.system.hostName);
+        resp = new DataQueueReturnCodeResponse(data);
+        if (resp.rc != 0xF006) { // Error
+          error('Read failed with code %d from %s with message of %s', resp.rc, this.system.hostName, this.converter.bufferToString(resp.message));
+          reject(new Error('Read failed with code ' + resp.rc + ' from ' + this.system.hostName + ' with message of ' + this.converter.bufferToString(resp.message)));
+        } else { // No data
+          debug('No data to read');
+          resolve(null);
+        }
+      } else if (resp.requestResponseId == DataQueueReadResponse.ID) {
+        debug('Data received from %s', this.system.hostName);
+        resp = new DataQueueReadResponse(data);
+        let res = {
+          sender: this.converter.bufferToString(resp.senderInfo),
+          entry: resp.entry,
+          key: resp.key,
+          converter: this.converter
+        };
+        debug('Data is %j', res);
+        resolve(res);
+      } else {
+        error('Invalid read response ID received from %s', this.system.hostName);
+        reject(new Error('Invalid read response ID received from ' + this.system.hostName));
       }
     }
   }

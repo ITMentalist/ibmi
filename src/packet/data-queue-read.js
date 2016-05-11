@@ -93,3 +93,75 @@ export class DataQueueReadRequest extends Packet {
   }
 
 }
+
+export class DataQueueReadResponse extends Packet {
+
+  constructor(dataOrSize) {
+
+    if (!dataOrSize) {
+      super(58);
+    } else {
+      super(dataOrSize);
+    }
+
+    if (!dataOrSize) {
+      this.length = this.data.length;
+      this.templateLength = 38;
+      this.serviceId = DataQueueService.SERVICE.id;
+      this.requestResponseId = DataQueueReadResponse.ID;
+    }
+  }
+
+  get senderInfo() {
+    return this.data.slice(22, 58);
+  }
+
+  set senderInfo(val) {
+    val.copy(this.data, 22, 0, val.length);
+  }
+
+  set entry(val) {
+    this.entryLength = val.length;
+    let start = this.data.length;
+    let b = new Buffer(this.data.length + 6 + this.entryLength);
+    this.data.copy(b, 0, 0, b.length);
+    this.data = b;
+    this.length = this.data.length;
+    this.set32Bit(val.length + 6, start);
+    this.set16Bit(DataQueueReadResponse.ENTRY, start + 4);
+    val.copy(this.data, start + 6, 0, val.length);
+  }
+
+  get entry() {
+    return this.getField(DataQueueReadResponse.ENTRY);
+  }
+
+  set key(val) {
+    this.keyLength = val.length;
+    let start = this.data.length;
+    let b = new Buffer(this.data.length + 6 + this.keyLength);
+    this.data.copy(b, 0, 0, b.length);
+    this.data = b;
+    this.length = this.data.length;
+    this.set32Bit(val.length + 6, start);
+    this.set16Bit(DataQueueReadResponse.KEY, start + 4);
+    val.copy(this.data, start + 6, 0, val.length);
+  }
+
+  get key() {
+    return this.getField(DataQueueReadResponse.KEY);
+  }
+
+  static get ENTRY() {
+    return 0x5002;
+  }
+
+  static get KEY() {
+    return 0x5003;
+  }
+
+  static get ID() {
+    return 0x8003;
+  }
+
+}

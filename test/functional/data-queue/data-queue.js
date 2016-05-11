@@ -90,7 +90,64 @@ describe('DataQueue', () => {
 
   });
 
-  describe('#clear()', () => {
+  describe('#peek()', () => {
+
+    it('should fail to peek', function() {
+      this.timeout(10000);
+      let dq = new DataQueue(ibmi, '/QSYS.lib/SOMELIB.LIB/BAD.DTAQ');
+      return dq.peek().should.be.rejectedWith(/Read failed with code/);
+    });
+
+    it('should peek', function(done) {
+      this.timeout(10000);
+      let dq = new DataQueue(ibmi, queuePath);
+      dq.peek().then((res) => {
+        should.exist(res);
+        should.exist(res.data);
+        res.data.toString().should.equal('DATA');
+        done();
+      }).catch((err) => {
+        done(err);
+      });
+    });
+
+  });
+
+  describe('#read()', () => {
+
+    it('should fail to read', function() {
+      this.timeout(10000);
+      let dq = new DataQueue(ibmi, '/QSYS.lib/SOMELIB.LIB/BAD.DTAQ');
+      return dq.read().should.be.rejectedWith(/Read failed with code/);
+    });
+
+    it('should read', function(done) {
+      this.timeout(10000);
+      let dq = new DataQueue(ibmi, queuePath);
+      dq.read().then((res) => {
+        should.exist(res);
+        should.exist(res.data);
+        res.data.toString().should.equal('DATA');
+        done();
+      }).catch((err) => {
+        done(err);
+      });
+    });
+
+    it('should read no data', function(done) {
+      this.timeout(10000);
+      let dq = new DataQueue(ibmi, queuePath);
+      dq.read().then((res) => {
+        should.not.exist(res);
+        done();
+      }).catch((err) => {
+        done(err);
+      });
+    });
+
+  });
+
+  /*describe('#clear()', () => {
 
     it('should fail to clear', function() {
       this.timeout(10000);
@@ -120,6 +177,6 @@ describe('DataQueue', () => {
       return dq.delete().should.be.fulfilled;
     });
 
-  });
+  });*/
 
 });
