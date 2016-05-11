@@ -147,7 +147,7 @@ describe('DataQueue', () => {
 
   });
 
-  /*describe('#clear()', () => {
+  describe('#clear()', () => {
 
     it('should fail to clear', function() {
       this.timeout(10000);
@@ -177,6 +177,6 @@ describe('DataQueue', () => {
       return dq.delete().should.be.fulfilled;
     });
 
-  });*/
+  });
 
 });

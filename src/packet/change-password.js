@@ -106,7 +106,6 @@ export class ChangePasswordRequest extends Packet {
 
   set returnError(val) {
     let offset = 63 + this.oldPasswordLength + this.newPasswordLength + (this.encryptedPasswordLength == 8 ? 0 : 42);
-    console.log(offset);
     this.set32Bit(7, offset);
     this.set16Bit(ChangePasswordRequest.RETURN_ERROR, offset + 4);
     this.data[offset + 6] = val;

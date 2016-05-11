@@ -7,6 +7,7 @@ const debug = require('debug')('ibmi:types:converter');
 
 const ccsidMap = new Map();
 ccsidMap.set(37, 37);
+ccsidMap.set(1200, 1200);
 ccsidMap.set(13488, 1200);
 ccsidMap.set(61952, 1200);
 

@@ -6,6 +6,7 @@ import Environment from './util/environment';
 import { RandomSeedExchangeRequest, RandomSeedExchangeResponse } from './packet/random-seed-exchange';
 import { StartServerRequest, StartServerResponse } from './packet/start-server';
 import PasswordEncryptor from './util/password-encryptor';
+import Converter from './types/converter';
 
 const debug = require('debug')('ibmi:ibmi');
 let error = require('debug')('ibmi:ibmi:error');
@@ -117,7 +118,10 @@ export default class IBMi {
         let startServerResp = await this.startServer(seeds.clientSeed, seeds.serverSeed, service, socket, connectionId);
         debug('Start server response %j', startServerResp);
         res.jobName = startServerResp.jobName;
-        //res.jobString = Converter.bufferToStringByCCSID(res.jobName, this.serverCCSID);
+        let converter = new Converter({
+          ccsid: this.serverCCSID
+        });
+        res.jobString = converter.bufferToString(res.jobName);
         res.correlationId = startServerResp.correlationId;
       }
       this.connections.set(connectionId, res);

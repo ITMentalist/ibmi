@@ -24,7 +24,6 @@ export class DataQueueCreateRequest extends Packet {
     } else if (authority == '*CHANGE') {
       this.authority = 0xF1;
     } else if (authority == '*EXCLUDE') {
-      console.log('*** HERE');
       this.authority = 0xF2;
     } else {
       this.authority = 0xF3;

@@ -1,7 +1,7 @@
 'use strict';
 
 import PortMapper from '../../../src/service/port-mapper';
-import Command from '../../../src/service/command';
+import RemoteCommandService from '../../../src/service/remote-command-service';
 
 import sinon from 'sinon';
 import Mitm from 'mitm';
@@ -62,16 +62,16 @@ describe('PortMapper', () => {
 
     it('should fail due to connection refused', () => {
       mitm.disable();
-      return portMapper.getServiceConnection('localhost', Command.SERVICE).should.be.rejectedWith(/ECONNREFUSED/);
+      return portMapper.getServiceConnection('localhost', RemoteCommandService.SERVICE).should.be.rejectedWith(/ECONNREFUSED/);
     });
 
     it('should fail due to unknown service', () => {
       unknownService = true;
-      return portMapper.getServiceConnection('localhost', Command.SERVICE).should.be.rejectedWith(/Unknown service/);
+      return portMapper.getServiceConnection('localhost', RemoteCommandService.SERVICE).should.be.rejectedWith(/Unknown service/);
     });
 
     it('should query service port', (done) => {
-      portMapper.getServiceConnection('localhost', Command.SERVICE).then((res) => {
+      portMapper.getServiceConnection('localhost', RemoteCommandService.SERVICE).then((res) => {
         queryServicePort.called.should.equal(true);
         res.should.have.property('writable').that.equals(true);
         done();
@@ -82,7 +82,7 @@ describe('PortMapper', () => {
 
     it('should get port from cache', (done) => {
       portMapper.cachePort('localhost', 'as-rmtcmd', 8476);
-      portMapper.getServiceConnection('localhost', Command.SERVICE).then((res) => {
+      portMapper.getServiceConnection('localhost', RemoteCommandService.SERVICE).then((res) => {
         queryServicePort.called.should.equal(false);
         res.should.have.property('writable').that.equals(true);
         done();
@@ -93,7 +93,7 @@ describe('PortMapper', () => {
 
     it('should use default port', (done) => {
       portMapper.useDefault = true;
-      portMapper.getServiceConnection('localhost', Command.SERVICE).then((res) => {
+      portMapper.getServiceConnection('localhost', RemoteCommandService.SERVICE).then((res) => {
         queryServicePort.called.should.equal(false);
         res.should.have.property('writable').that.equals(true);
         done();
@@ -106,12 +106,12 @@ describe('PortMapper', () => {
       portMapper.useDefault = true;
       portMapper.useTLS = true;
       mitm.disable();
-      return portMapper.getServiceConnection('localhost', Command.SERVICE).should.be.rejectedWith(/ECONNREFUSED/);
+      return portMapper.getServiceConnection('localhost', RemoteCommandService.SERVICE).should.be.rejectedWith(/ECONNREFUSED/);
     });
 
     it('should query TLS service port', (done) => {
       portMapper.useTLS = true;
-      portMapper.getServiceConnection('localhost', Command.SERVICE).then((res) => {
+      portMapper.getServiceConnection('localhost', RemoteCommandService.SERVICE).then((res) => {
         queryServicePort.called.should.equal(true);
         res.should.have.property('writable').that.equals(true);
         done();
