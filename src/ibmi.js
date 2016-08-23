@@ -7,6 +7,7 @@ import { RandomSeedExchangeRequest, RandomSeedExchangeResponse } from './packet/
 import { StartServerRequest, StartServerResponse } from './packet/start-server';
 import PasswordEncryptor from './util/password-encryptor';
 import Converter from './types/converter';
+import genericPool from 'generic-pool';
 
 const debug = require('debug')('ibmi:ibmi');
 let error = require('debug')('ibmi:ibmi:error');
@@ -39,6 +40,12 @@ export default class IBMi {
     this.portMapperPort = opts.portMapperPort || 449;
     this.useDefaultPorts = opts.useDefaultPorts || false;
     this.useTLS = opts.useTLS || false;
+    this.databasePoolOpts = opts.databasePoolOpts || {
+      min: 2,
+      max: 10,
+      timeout: 60
+    };
+
     this.nlv = Environment.getNlv(process.env.LANG);
     this.ccsid = 0;
     this.connections = new Map();
@@ -47,6 +54,18 @@ export default class IBMi {
       port: this.portMapperPort,
       useDefault: this.useDefaultPorts,
       useTLS: this.useTLS
+    });
+
+    // Create database connection pool
+    this.databasePool = new genericPool.Pool({
+      name: 'IBMi',
+      create: function(callback) {
+      },
+      destroy: function(client) { },
+      max: this.databasePoolOpts.max,
+      min: this.databasePoolOpts.min,
+      idleTimeoutMillis: this.databasePoolOpts.timeout * 1000,
+      log: true
     });
 
     debug('New IBMi created: host name = %s, user ID = %s, password = %s, port mapper port = %d, use default ports = %s, use TLS = %s, nlv = %s, ccsid = %d',
@@ -67,6 +86,13 @@ export default class IBMi {
     debug('Write packet with correlation of %s', packet.correlationId.toString(16));
     debug('Packet data is %s', packet.data.toString('hex'));
     socket.write(packet.data);
+  }
+
+  /**
+   * Get a database connection.
+   */
+  async getDatabaseConnection() {
+    debug('Attempt to get database connection from %s', this.hostName);
   }
 
   /**

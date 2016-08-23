@@ -57,6 +57,9 @@ describe('IBMi', () => {
       ibmi.portMapper.port.should.equal(449);
       ibmi.portMapper.useDefault.should.equal(false);
       ibmi.portMapper.useTLS.should.equal(false);
+      ibmi.databasePoolOpts.min.should.equal(2);
+      ibmi.databasePoolOpts.max.should.equal(10);
+      ibmi.databasePoolOpts.timeout.should.equal(60);
     });
 
     it('should create new instance with specific options', () => {
@@ -66,7 +69,12 @@ describe('IBMi', () => {
         password: 'PASS',
         portMapperPort: 9449,
         useDefaultPorts: true,
-        useTLS: true
+        useTLS: true,
+        databasePoolOpts: {
+          min: 10,
+          max: 100,
+          timeout: 60
+        }
       };
       ibmi = new IBMi(opts);
       ibmi.hostName.should.equal(opts.hostName);
@@ -78,6 +86,9 @@ describe('IBMi', () => {
       ibmi.portMapper.port.should.equal(9449);
       ibmi.portMapper.useDefault.should.equal(true);
       ibmi.portMapper.useTLS.should.equal(true);
+      ibmi.databasePoolOpts.min.should.equal(10);
+      ibmi.databasePoolOpts.max.should.equal(100);
+      ibmi.databasePoolOpts.timeout.should.equal(60);
     });
 
   });
